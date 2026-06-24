@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <EFCoreProject>Project.Infrastructure</EFCoreProject>
+    <EFCoreStartupProject>Project.API</EFCoreStartupProject>
+  </PropertyGroup>
+</Project>
