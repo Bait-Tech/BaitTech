@@ -1,0 +1,87 @@
+name: Deploy to SmarterASP
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: ecommerceplatform.client/package-lock.json
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Install Angular dependencies
+        working-directory: ecommerceplatform.client
+        run: npm ci
+
+      - name: Build Angular
+        working-directory: ecommerceplatform.client
+        run: npm run build -- --configuration production
+
+      - name: Copy Angular output to wwwroot
+        run: |
+          SOURCE="ecommerceplatform.client/dist/ecommerceplatform.client/browser"
+          TARGET="ECommercePlatform.Server/wwwroot"
+          if [ ! -d "$SOURCE" ]; then
+            echo "Angular build output not found at $SOURCE"
+            exit 1
+          fi
+          mkdir -p "$TARGET"
+          cp -r "$SOURCE"/. "$TARGET"/
+
+      - name: Publish ASP.NET app
+        run: >
+          dotnet publish ECommercePlatform.Server/ECommercePlatform.Server.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          -o ./publish
+          /p:SkipSpaProjectReference=true
+
+      - name: Write production connection string
+        env:
+          DB_CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          settings = {
+            "Logging": {
+              "LogLevel": {
+                "Default": "Information",
+                "Microsoft.AspNetCore": "Warning"
+              }
+            },
+            "Cache": {
+              "UseMemoryCache": True
+            },
+            "ConnectionStrings": {
+              "DefaultConnection": os.environ["DB_CONNECTION_STRING"]
+            }
+          }
+          with open("./publish/appsettings.Production.json", "w", encoding="utf-8") as f:
+            json.dump(settings, f, indent=2)
+          PY
+
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./publish/
+          server-dir: ./
+          dangerous-clean-slate: false
