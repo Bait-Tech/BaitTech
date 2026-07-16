@@ -6,69 +6,158 @@
           <h4 class="m-0">Hero Section</h4>
         </div>
         <div class="col-4 col-md-2 text-end">
-          <p-button class="w-100" label="Save Changes" icon="pi pi-plus" styleClass="p-button-success"
-            (onClick)="saveChanges()"></p-button>
+          <p-button
+            class="w-100"
+            label="Save Changes"
+            icon="pi pi-check"
+            styleClass="p-button-success"
+            (onClick)="saveChanges()"
+          ></p-button>
         </div>
       </div>
 
-      <div id="heroImagesCarousel" class="carousel slide" data-bs-ride="carousel">
-        <div class="carousel-indicators">
-          <button type="button" data-bs-target="#heroImagesCarousel" data-bs-slide-to="0" class="active"
-            aria-current="true" aria-label="Add Image"></button>
-          <ng-container *ngFor="let item of heroSection?.heroSectionImageDTOs; let i = index">
-            <button type="button" data-bs-target="#heroImagesCarousel" [attr.data-bs-slide-to]="i+1"
-              [attr.aria-label]="'Image ' + (i + 1)"></button>
-          </ng-container>
+      <div class="hero-section-body">
+        <div class="hero-images-header">
+          <div class="hero-images-heading">
+            <span class="hero-images-icon">
+              <i class="pi pi-images"></i>
+            </span>
+            <div>
+              <h5 class="hero-images-title">Hero Images</h5>
+              <p class="hero-images-desc">Upload banner images for your homepage carousel</p>
+            </div>
+          </div>
+          @if (heroImages().length > 0) {
+            <span class="hero-images-count">{{ heroImages().length }} images</span>
+          }
         </div>
 
-        <div class="carousel-inner">
-          <div class="carousel-item active">
-            <div class="ratio ratio-16x9">
-              <div class="d-flex align-items-center justify-content-center border border-2 border-dashed p-3 bg-light">
-                <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*"
-                  class="position-absolute w-100 h-100 opacity-0" style="cursor: pointer;" aria-label="Upload image">
-                <div class="text-center">
-                  <img src="assets/images/no-image-icon-23485.png" alt="Upload image" class="img-fluid mb-3"
-                    style="max-width: 80px;" (click)="fileInput.click()">
-                  <p class="text-muted mb-0">Click to upload image</p>
+        <input
+          #fileInput
+          type="file"
+          accept="image/*"
+          class="hero-upload-input"
+          (change)="onFileSelected($event)"
+        />
+
+        <button type="button" class="hero-upload-zone" (click)="fileInput.click()">
+          <span class="hero-upload-icon">
+            <i class="pi pi-cloud-upload"></i>
+          </span>
+          <span class="hero-upload-title">Click to upload hero image</span>
+          <span class="hero-upload-hint">16:9 recommended · PNG or JPG</span>
+        </button>
+
+        @if (heroImages().length > 0) {
+          <div class="hero-gallery">
+            @for (item of heroImages(); track $index; let i = $index) {
+              <div class="hero-card">
+                <img
+                  [src]="item.imageUrl"
+                  [alt]="'Hero image ' + (i + 1)"
+                  class="hero-card-preview"
+                />
+                @if (item.isMain) {
+                  <span class="hero-main-badge">Main</span>
+                }
+                <span class="hero-slide-badge">Slide {{ i + 1 }}</span>
+                <div class="hero-card-overlay">
+                  <input
+                    [id]="'editImage' + i"
+                    type="file"
+                    accept="image/*"
+                    class="hero-upload-input"
+                    (change)="onImageChange($event, i)"
+                  />
+                  <div class="hero-action-toolbar">
+                    <button
+                      type="button"
+                      class="hero-action-btn hero-action-btn-main"
+                      [class.hero-action-btn-active]="item.isMain"
+                      aria-label="Set as main slide"
+                      (click)="setMainImage(i)"
+                    >
+                      <i [ngClass]="item.isMain ? 'pi pi-star-fill' : 'pi pi-star'"></i>
+                    </button>
+                    <span class="hero-action-divider"></span>
+                    <label
+                      [for]="'editImage' + i"
+                      class="hero-action-btn hero-action-btn-edit"
+                      aria-label="Edit image"
+                    >
+                      <i class="pi pi-pencil"></i>
+                    </label>
+                    <span class="hero-action-divider"></span>
+                    <button
+                      type="button"
+                      class="hero-action-btn hero-action-btn-danger"
+                      aria-label="Remove image"
+                      (click)="removeImage(i)"
+                    >
+                      <i class="pi pi-trash"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="carousel-caption d-none d-md-block">
-              <h5>Add New Image</h5>
-            </div>
+            }
           </div>
 
-          <div class="carousel-item" *ngFor="let item of heroSection?.heroSectionImageDTOs; let i = index">
-            <div class="ratio ratio-16x9 position-relative">
-              <img [src]="item.imageUrl" [alt]="'Hero image ' + (i + 1)" class="w-100 h-100 object-fit-cover">
-              <div
-                class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-dark bg-opacity-50 hover-overlay">
-
-                <input [id]="'editImage' + i" type="file" accept="image/*" class="d-none"
-                  (change)="onImageChange($event,item.id)">
-                <label [for]="'editImage' + i" class="btn btn-outline-light mb-2">
-                  <i class="pi pi-pencil me-2"></i>
-                  <span>Edit Image</span>
-                </label>
-                <p class="text-white m-0">Click to edit image</p>
+          <div class="hero-preview-section">
+            <h6 class="hero-preview-label">Live Preview</h6>
+            <div id="heroPreviewCarousel" class="carousel slide hero-preview-carousel" data-bs-ride="carousel">
+              <div class="carousel-indicators hero-preview-indicators">
+                @for (item of heroImages(); track $index; let i = $index) {
+                  <button
+                    type="button"
+                    data-bs-target="#heroPreviewCarousel"
+                    [attr.data-bs-slide-to]="i"
+                    [class.active]="item.isMain"
+                    [attr.aria-current]="item.isMain ? 'true' : null"
+                    [attr.aria-label]="'Slide ' + (i + 1)"
+                  ></button>
+                }
               </div>
+
+              <div class="carousel-inner">
+                @for (item of heroImages(); track $index; let i = $index) {
+                  <div class="carousel-item" [class.active]="item.isMain">
+                    <div class="hero-preview-ratio">
+                      <img
+                        [src]="item.imageUrl"
+                        [alt]="'Hero preview ' + (i + 1)"
+                        class="hero-preview-image"
+                      />
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <button
+                class="carousel-control-prev hero-preview-control"
+                type="button"
+                data-bs-target="#heroPreviewCarousel"
+                data-bs-slide="prev"
+              >
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+              </button>
+              <button
+                class="carousel-control-next hero-preview-control"
+                type="button"
+                data-bs-target="#heroPreviewCarousel"
+                data-bs-slide="next"
+              >
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+              </button>
             </div>
           </div>
-        </div>
-
-        <button class="carousel-control-prev bg-dark bg-opacity-50 rounded-end" type="button"
-          data-bs-target="#heroImagesCarousel" data-bs-slide="prev"
-          style="width: 40px; height: 40px; top: auto; bottom: 15px; left: 15px;">
-          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-          <span class="visually-hidden">Previous</span>
-        </button>
-        <button class="carousel-control-next bg-dark bg-opacity-50 rounded-start" type="button"
-          data-bs-target="#heroImagesCarousel" data-bs-slide="next"
-          style="width: 40px; height: 40px; top: auto; bottom: 15px; right: 15px;">
-          <span class="carousel-control-next-icon" aria-hidden="true"></span>
-          <span class="visually-hidden">Next</span>
-        </button>
+        } @else {
+          <div class="hero-empty-state">
+            <i class="pi pi-image"></i>
+            <span>No hero images uploaded yet</span>
+          </div>
+        }
       </div>
     </div>
   </div>

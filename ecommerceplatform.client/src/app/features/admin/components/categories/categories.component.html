@@ -1,21 +1,25 @@
 <div class="grid">
   <div class="col-12">
+    <p-toast></p-toast>
+
+    <app-admin-page-header title="Categories" icon="pi pi-sitemap"
+      subtitle="Manage your product categories">
+      <button pButton pRipple label="New" icon="pi pi-plus" class="p-button-success"
+      (click)="openNew()"></button>
+      <button pButton pRipple label="Delete" icon="pi pi-trash" class="p-button-danger p-button-outlined"
+        (click)="deleteSelectedCategories()"
+      [disabled]="!selectedCategories || !selectedCategories.length"></button>
+    </app-admin-page-header>
+
     <div class="card">
-      <p-toast></p-toast>
-      <p-toolbar styleClass="mb-4">
-        <ng-template pTemplate="left">
-          <div class="my-2">
-            <button pButton pRipple label="New" icon="pi pi-plus" class="p-button-success mr-2"
-              (click)="openNew()"></button>
-            <button pButton pRipple label="Delete" icon="pi pi-trash" class="p-button-danger"
-              (click)="deleteSelectedCategories()"
-              [disabled]="!selectedCategories || !selectedCategories.length"></button>
-          </div>
-        </ng-template>
-      </p-toolbar>
-      <p-table #dt [value]="categories" [rows]="10" [paginator]="true" [globalFilterFields]="['name']"
-        [(selection)]="selectedCategories" [rowHover]="true" dataKey="id"
-        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries" [showCurrentPageReport]="true">
+      @if (loading()) {
+        <div class="table-loading">
+          <i class="pi pi-spin pi-spinner"></i>
+        </div>
+      } @else {
+        <p-table #dt [value]="categories()" [rows]="10" [paginator]="true" [globalFilterFields]="['name']"
+          [(selection)]="selectedCategories" selectionMode="multiple" [rowHover]="true" dataKey="id"
+          currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries" [showCurrentPageReport]="true">
         <ng-template pTemplate="header">
           <tr>
             <th style="width: 3rem">
@@ -37,48 +41,103 @@
             </td>
             <td>
               <button pButton pRipple icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2"
-                (click)="editCategory(category)"></button>
+              (click)="editCategory(category)"></button>
             </td>
           </tr>
         </ng-template>
       </p-table>
+      }
     </div>
-    <p-dialog [(visible)]="categoryDialog" [style]="{width: '450px'}" header="Category Details" [modal]="true"
-      styleClass="p-fluid">
-      <ng-template pTemplate="content">
-        <div class="field">
-          <label for="name">Name</label>
-          <input type="text" pInputText id="name" [(ngModel)]="category.name" required autofocus
-            [ngClass]="{'ng-invalid ng-dirty': submitted && !category.name}" />
-          <small class="ng-dirty ng-invalid" *ngIf="submitted && !category.name">Name is required.</small>
-        </div>
-        <div class="field">
-          <label for="image">Image</label>
-          <p-fileUpload #fileUpload mode="basic" chooseLabel="Choose Image" accept="image/*" [maxFileSize]="1000000"
-            (onSelect)="onFileSelect($event)">
-          </p-fileUpload>
-        </div>
-        <div *ngIf="category.imageUrl" class="field">
-          <img [src]="category.imageUrl" [alt]="category.name" width="150" class="mt-2 shadow-4" />
-        </div>
-      </ng-template>
-      <ng-template pTemplate="footer">
-        <button pButton pRipple label="Cancel" icon="pi pi-times" class="p-button-text" (click)="hideDialog()"></button>
-        <button pButton pRipple label="Save" icon="pi pi-check" class="p-button-text" (click)="saveCategory()"></button>
-      </ng-template>
-    </p-dialog>
 
-    <p-dialog [(visible)]="deleteCategoriesDialog" header="Confirm" [modal]="true" [style]="{width:'450px'}">
-      <div class="flex align-items-center justify-content-center">
-        <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem"></i>
-        <span>Are you sure you want to delete the selected categories?</span>
+    <app-side-panel
+      [visible]="categoryPanelVisible()"
+      [title]="panelTitle()"
+      [subtitle]="panelSubtitle()"
+      [icon]="panelIcon()"
+      width="32rem"
+      (visibleChange)="onPanelVisibleChange($event)">
+      <div class="admin-panel-form">
+        <div class="form-section-card">
+          <div class="form-section-header">
+            <span class="form-section-icon">
+              <i class="pi pi-tag"></i>
+            </span>
+            <div class="form-section-heading">
+              <h3 class="form-section-title">Category Details</h3>
+              <p class="form-section-desc">Name and display image for the category</p>
+            </div>
+          </div>
+
+          <div class="form-section-content">
+            <div class="form-field">
+              <label for="name">Category Name</label>
+              <input
+                type="text"
+                pInputText
+                id="name"
+                [(ngModel)]="category.name"
+                placeholder="e.g. Electronics"
+                class="form-control-full"
+                [ngClass]="{'ng-invalid ng-dirty': submitted && !category.name.trim()}" />
+              @if (submitted && !category.name.trim()) {
+                <small class="field-error">Category Name is required</small>
+              }
+            </div>
+
+            <div class="form-field">
+              <label>Category Image</label>
+              <input
+                #imageInput
+                type="file"
+                accept="image/*"
+                class="image-upload-input"
+                (change)="onImageInputChange($event)" />
+              <button type="button" class="image-upload-zone" (click)="imageInput.click()">
+                <span class="image-upload-icon">
+                  <i class="pi pi-cloud-upload"></i>
+                </span>
+                <span class="image-upload-title">Click to upload image</span>
+                <span class="image-upload-hint">PNG or JPG, max 1MB</span>
+              </button>
+              @if (category.imageUrl) {
+                <div class="image-preview-card">
+                  <img [src]="category.imageUrl" [alt]="category.name" />
+                </div>
+              }
+            </div>
+          </div>
+        </div>
       </div>
-      <ng-template pTemplate="footer">
-        <button pButton pRipple icon="pi pi-times" class="p-button-text" label="No"
-          (click)="deleteCategoriesDialog = false"></button>
-        <button pButton pRipple icon="pi pi-check" class="p-button-text" label="Yes"
-          (click)="confirmDeleteSelected()"></button>
-      </ng-template>
-    </p-dialog>
+
+      <div panelFooter class="admin-panel-footer">
+        <button
+          pButton
+          pRipple
+          type="button"
+          label="Cancel"
+          icon="pi pi-times"
+          class="p-button-outlined p-button-secondary"
+          [disabled]="saving()"
+          (click)="hidePanel()">
+        </button>
+        <p-button
+          [label]="saveButtonLabel()"
+          icon="pi pi-check"
+          [loading]="saving()"
+          (onClick)="saveCategory()">
+        </p-button>
+      </div>
+    </app-side-panel>
+
+    <app-admin-confirm-panel
+      [visible]="deletePanelVisible()"
+      title="Delete Categories"
+      subtitle="This action cannot be undone"
+      message="Are you sure you want to delete the selected categories?"
+      confirmLabel="Delete"
+      cancelLabel="Cancel"
+      (visibleChange)="onDeletePanelVisibleChange($event)"
+      (confirmed)="confirmDeleteSelected()">
+    </app-admin-confirm-panel>
   </div>
 </div>

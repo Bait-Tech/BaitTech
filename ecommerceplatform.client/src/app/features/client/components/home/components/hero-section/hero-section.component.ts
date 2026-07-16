@@ -1,30 +1,25 @@
-import { Component, OnInit } from '@angular/core';
-import { HeroSectionService } from '../../../../../admin/services/hero-section.service';
-import { IHeroSection } from '../../../../../admin/interfaces/hero-section.interface';
+import { Component, computed, input } from '@angular/core';
+import { IHeroSectionImage } from '../../../../../admin/interfaces/hero-section-image.interface';
 
 @Component({
   selector: 'app-hero-section',
   templateUrl: './hero-section.component.html',
   styleUrls: ['./hero-section.component.css'],
-  standalone:false,
+  standalone: false,
 })
-export class HeroSectionComponent implements OnInit {
-  heroSection: IHeroSection | undefined;
+export class HeroSectionComponent {
+  heroImages = input<IHeroSectionImage[]>([]);
 
-  constructor(private heroSectionService: HeroSectionService) {}
+  hasHeroImages = computed(() => this.heroImages().length > 0);
 
-  ngOnInit() {
-    this.getHeroSection();
-  }
+  initialActiveIndex = computed(() => {
+    const images = this.heroImages();
 
+    if (images.length === 0) {
+      return 0;
+    }
 
- 
-
-  private getHeroSection() {
-    this.heroSectionService
-      .getHeroSection()
-      .subscribe((section: IHeroSection) => {
-        this.heroSection = section;
-      });
-  }
+    const mainIndex = images.findIndex((image) => image.isMain);
+    return mainIndex >= 0 ? mainIndex : 0;
+  });
 }

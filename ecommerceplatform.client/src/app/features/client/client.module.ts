@@ -11,15 +11,14 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { DividerModule } from 'primeng/divider';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { DynamicDialogModule } from 'primeng/dynamicdialog';
 import { FileUploadModule } from 'primeng/fileupload';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputTextareaModule } from 'primeng/inputtextarea';
+import { TextareaModule } from 'primeng/textarea';
 import { MenuModule } from 'primeng/menu';
 import { MessageModule } from 'primeng/message';
-import { MessagesModule } from 'primeng/messages';
 import { PanelMenuModule } from 'primeng/panelmenu';
 import { PasswordModule } from 'primeng/password';
 import { RippleModule } from 'primeng/ripple';
@@ -37,10 +36,9 @@ import { SubCategoriesComponent } from './components/sub-categories/sub-categori
 import { ProductsComponent } from './components/products/products.component';
 import { ProductDetailsComponent } from './components/product-details/product-details.component';
 import { MessageService } from 'primeng/api';
-import { ShoppingCartComponent } from './components/shopping-cart/shopping-cart.component';
+import { CartRedirectComponent } from './components/shopping-cart/cart-redirect.component';
 import { MainImagePipe } from './pipes/main-image.pipe';
-import { OrderPopupComponent } from './components/shopping-cart/components/order-popup/order-popup.component';
-const routes: Routes = [
+import { SharedModule as AppSharedModule } from '../../shared/shared.module';const routes: Routes = [
   {
     path: '',
     component: ClientLayoutComponent,
@@ -53,7 +51,7 @@ const routes: Routes = [
       { path: 'products', component: ProductsComponent },
       { path: 'products/:id', component: ProductsComponent },
       { path: 'product-details/:id', component: ProductDetailsComponent },
-      { path: 'shopping-cart', component: ShoppingCartComponent },
+      { path: 'shopping-cart', component: CartRedirectComponent },
     ],
   },
 ];
@@ -66,7 +64,7 @@ const routes: Routes = [
     RouterModule.forChild(routes),
     InputTextModule,
     InputNumberModule,
-    InputTextareaModule,
+    TextareaModule,
     PasswordModule,
     CheckboxModule,
     RippleModule,
@@ -78,11 +76,10 @@ const routes: Routes = [
     ToastModule,
     ConfirmDialogModule,
     DialogModule,
-    DropdownModule,
+    SelectModule,
     PanelMenuModule,
     DividerModule,
     MessageModule,
-    MessagesModule,
     AvatarModule,
     BadgeModule,
     FileUploadModule,
@@ -90,6 +87,7 @@ const routes: Routes = [
     ToolbarModule,
     DynamicDialogModule,
     ColorChromeModule,
+    AppSharedModule,
   ],
   declarations: [
     HeroSectionComponent,
@@ -100,11 +98,10 @@ const routes: Routes = [
     SubCategoriesComponent,
     ProductsComponent,
     ProductDetailsComponent,
-    ShoppingCartComponent,
-    MainImagePipe,
-    OrderPopupComponent
+    CartRedirectComponent,
+    MainImagePipe
   ],
-  providers:[
+  providers: [
     MessageService
   ]
 })

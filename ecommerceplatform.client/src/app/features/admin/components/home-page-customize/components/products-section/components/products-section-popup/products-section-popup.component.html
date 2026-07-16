@@ -1,97 +1,133 @@
-<div class="p-fluid">
-  <form [formGroup]="form">
-    <div class="container">
+<form [formGroup]="form" class="admin-panel-form">
+  <div class="form-section-card">
+    <div class="form-section-header">
+      <span class="form-section-icon">
+        <i class="pi pi-pencil"></i>
+      </span>
+      <div class="form-section-heading">
+        <h3 class="form-section-title">Section Content</h3>
+        <p class="form-section-desc">Title and badge settings</p>
+      </div>
+    </div>
 
-      <div class="row">
-        <div class="col-12">
-          <div class="field">
-            <label for="title">Title</label>
-            <input formControlName="title" type="text" pInputText id="title" />
-          </div>
-        </div>
+    <div class="form-section-content">
+      <div class="form-field">
+        <label for="title">Title</label>
+        <input formControlName="title" type="text" pInputText id="title" class="form-control-full" placeholder="Section title" />
+        @if (isFieldInvalid('title')) {
+          <small class="field-error">{{ getFieldError('title') }}</small>
+        }
       </div>
 
-      <div class="row">
-        <div class="col-12">
-          <div class="field">
-            <label for="badgeText">Badge Text</label>
-            <input formControlName="badgeText" type="text" pInputText id="badgeText" />
-          </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label for="badgeText">Badge Text</label>
+          <input formControlName="badgeText" type="text" pInputText id="badgeText" class="form-control-full" placeholder="Badge label" />
+        </div>
+        <div class="form-field">
+          <label for="badgeColor">Badge Color</label>
+          <color-chrome formControlName="badgeColor"></color-chrome>
         </div>
       </div>
+    </div>
+  </div>
 
-      <div class="row">
-        <div class="col-12">
-          <div class="field">
-            <label for="badgeColor">Badge Color</label>
-            <color-chrome  [color]="form.get('badgeColor')?.value" formControlName="badgeColor"></color-chrome>
-          </div>
-        </div>
+  <div class="form-section-card">
+    <div class="form-section-header">
+      <span class="form-section-icon">
+        <i class="pi pi-sitemap"></i>
+      </span>
+      <div class="form-section-heading">
+        <h3 class="form-section-title">Category Filters</h3>
+        <p class="form-section-desc">Choose category and sub category</p>
       </div>
+    </div>
 
-      <div class="row">
-        <div class="col-6">
-          <div class="field">
-            <label for="categoryList">Category List</label>
-            <p-dropdown [placeholder]="'Select A Category'" formControlName="categoryID"
-              (onChange)="onCategoryChange($event)" id="categoryList" [options]="categoryList" optionLabel="name"
-              optionValue="id"></p-dropdown>
+    <div class="form-section-content">
+      <div class="form-row">
+        <div class="form-field">
+          <label for="categoryList">Category</label>
+          <div class="select-field-wrapper" [class.select-field-invalid]="isFieldInvalid('categoryID')">
+            <p-select
+              inputId="categoryList"
+              [options]="categoryOptions()"
+              formControlName="categoryID"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Select a category"
+              [appendTo]="appendTarget"
+              [overlayOptions]="selectOverlayOptions"
+              (onChange)="onCategoryChange($event)"
+              (onShow)="onSelectShow()"
+              panelStyleClass="admin-select-panel"
+              styleClass="admin-select">
+            </p-select>
           </div>
+          @if (isFieldInvalid('categoryID')) {
+            <small class="field-error">{{ getFieldError('categoryID') }}</small>
+          }
         </div>
-        <div class="col-6" *ngIf="displayCategoryDDl">
-          <div class="field">
-            <label id="subCategoryList" for="badgeColor">Sub Category List</label>
-            <p-dropdown id="subCategoryList" formControlName="subCategoryID" [placeholder]="'Select A Sub Category'"
-              [options]="subCategoryList" optionLabel="englishName" optionValue="id"
-              (onChange)="onSubCategoryChange($event)"></p-dropdown>
-          </div>
-        </div>
-      </div>
 
-      <div class="row mt-4" *ngIf="productsList && productsList.length > 0">
-        <div class="col-12">
-          <h5>Products</h5>
-          <p>Select products to include in this section:</p>
-        </div>
-      </div>
-
-      <div class="row" *ngIf="productsList && productsList.length > 0">
-        <div class="col-6 col-sm-6 mb-3" *ngFor="let product of productsList">
-          <div class="card" [ngClass]="{'border-primary': product.isSelected}">
-            <div class="card-img-top text-center py-2" *ngIf="product.mainImageUrl">
-              <img [src]="product.mainImageUrl" class="img-fluid" style="max-height: 150px;" alt="{{ product.name }}">
+        @if (showSubCategorySelect()) {
+          <div class="form-field">
+            <label for="subCategoryList">Sub Category</label>
+            <div class="select-field-wrapper">
+              <p-select
+                inputId="subCategoryList"
+                [options]="subCategoryOptions()"
+                formControlName="subCategoryID"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Select a sub category"
+                [appendTo]="appendTarget"
+                [overlayOptions]="selectOverlayOptions"
+                (onChange)="onSubCategoryChange($event)"
+                (onShow)="onSelectShow()"
+                panelStyleClass="admin-select-panel"
+                styleClass="admin-select">
+              </p-select>
             </div>
-            <div class="card-body">
-              <div class="d-flex align-items-center">
-                <p-checkbox [binary]="true" [(ngModel)]="product.isSelected" [ngModelOptions]="{standalone: true}">
-                </p-checkbox>
-                <div class="ms-3">
-                  <h6 class="mb-0">{{ product.name }}</h6>
-                  <small class="text-muted">
-                    {{ product.price | currency }}
-                    <span *ngIf="product.discountPrice" class="text-danger ms-2">
-                      <del>{{ product.discountPrice | currency }}</del>
-                    </span>
-                  </small>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section-card">
+    <div class="form-section-header">
+      <span class="form-section-icon">
+        <i class="pi pi-box"></i>
+      </span>
+      <div class="form-section-heading">
+        <h3 class="form-section-title">Products</h3>
+        <p class="form-section-desc">Select products for this section</p>
+      </div>
+    </div>
+
+    <div class="form-section-content">
+      @if (productsList().length > 0) {
+        <div class="section-products-grid">
+          @for (product of productsList(); track product.id) {
+            <div class="section-product-card" [class.section-product-card-selected]="product.isSelected">
+              @if (product.mainImageUrl) {
+                <img [src]="product.mainImageUrl" class="section-product-image" [alt]="product.name" />
+              }
+              <div class="section-product-body">
+                <p-checkbox [binary]="true" [(ngModel)]="product.isSelected" [ngModelOptions]="{standalone: true}"></p-checkbox>
+                <div class="section-product-info">
+                  <span class="section-product-name">{{ product.name }}</span>
+                  <span class="section-product-price">{{ product.price | jodCurrency }}</span>
                 </div>
               </div>
             </div>
-          </div>
+          }
         </div>
-      </div>
-
-      <div class="row mt-3" *ngIf="productsList && productsList.length === 0">
-        <div class="col-12">
-          <div class="alert alert-info">
-            No products available for the selected category/subcategory.
-          </div>
+      } @else {
+        <div class="image-empty-state">
+          <i class="pi pi-box"></i>
+          <span>No products available for the selected category</span>
         </div>
-      </div>
-
+      }
     </div>
-    <div class="flex justify-content-end mt-4">
-      <button pButton label="Cancel" icon="pi pi-times" (click)="cancel()" class="p-button-text mr-2"></button>
-      <button pButton label="Save" icon="pi pi-check" (click)="saveSection()" [disabled]="!form.valid"></button>
-    </div>
-  </form>
-</div>
+  </div>
+</form>

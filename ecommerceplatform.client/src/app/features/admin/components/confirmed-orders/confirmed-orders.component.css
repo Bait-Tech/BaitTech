@@ -1,0 +1,20 @@
+.table-shell-content {
+  position: relative;
+}
+
+.table-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 12rem;
+  font-size: 2rem;
+  color: var(--primary-color);
+}
+
+.table-loading-overlay {
+  position: absolute;
+  inset: 0;
+  min-height: auto;
+  background: rgba(255, 255, 255, 0.7);
+  z-index: 2;
+}

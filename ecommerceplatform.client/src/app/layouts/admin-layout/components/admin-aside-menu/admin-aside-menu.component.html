@@ -1,23 +1,45 @@
 <div class="layout-sidebar">
-  <div class="layout-menu-container">
-      <div class="layout-menu-logo">
-          <img src="assets/logo.png" alt="DesignHire Logo" class="logo-image" />
-          <span class="app-name">Bait Tech</span>
-      </div>
-      
-      <p-panelMenu 
-          [model]="menuItems" 
-          [multiple]="false"
-          styleClass="layout-menu">
-      </p-panelMenu>
+  <div class="sidebar-brand">
+    <div class="brand-logo">
+      <img [src]="companyService.logoUrl()" [alt]="companyService.companyName()" class="brand-logo-img" />
+    </div>
+    <div class="brand-text">
+      <span class="brand-name">{{ companyService.companyName() }}</span>
+      <span class="brand-tag">Admin Panel</span>
+    </div>
+  </div>
 
-      <div class="layout-menu-footer">
-        <button type="button" 
-                (click)="logout()" 
-                class="custom-logout-btn">
-          <i class="pi pi-sign-out"></i>
-          <span>Logout</span>
-        </button>
+  <nav class="sidebar-nav">
+    @for (group of navGroups(); track group) {
+      <div class="nav-group">
+        <span class="nav-group-title">{{ group.title }}</span>
+        @for (item of group.items; track item) {
+          <a
+            class="nav-link"
+            [routerLink]="item.route"
+            routerLinkActive="active"
+            >
+            <span class="nav-indicator"></span>
+            <i class="nav-icon" [ngClass]="item.icon"></i>
+            <span class="nav-label">{{ item.label }}</span>
+          </a>
+        }
       </div>
+    }
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">{{ userInitials() }}</div>
+      <div class="user-info">
+        <span class="user-name">{{ userName() }}</span>
+        <span class="user-role">{{ userRole() }}</span>
+      </div>
+    </div>
+
+    <button type="button" (click)="logout()" class="logout-btn">
+      <i class="pi pi-sign-out"></i>
+      <span>Logout</span>
+    </button>
   </div>
 </div>

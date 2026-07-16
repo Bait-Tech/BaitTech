@@ -1,22 +1,31 @@
 <div class="grid">
   <div class="col-12">
-    <div class="card">
-      <p-toast></p-toast>
-      <p-toolbar styleClass="mb-4">
-        <ng-template pTemplate="left">
-          <div class="my-2">
-            <button pButton pRipple label="New" icon="pi pi-plus" class="p-button-success mr-2"
-              (click)="openNew()"></button>
-            <button pButton pRipple label="Delete" icon="pi pi-trash" class="p-button-danger"
-              (click)="deleteSelectedProducts()" [disabled]="!selectedProducts || !selectedProducts.length"></button>
-          </div>
-        </ng-template>
-      </p-toolbar>
+    <p-toast></p-toast>
 
-      <p-table #dt [value]="products" [rows]="10" [paginator]="true" [totalRecords]="totalRecords" [lazy]="true"
-        (onLazyLoad)="loadProducts($event)" [globalFilterFields]="['name', 'code']" [(selection)]="selectedProducts"
-        [rowHover]="true" dataKey="id" [loading]="loading"
-        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries" [showCurrentPageReport]="true">
+    <app-admin-page-header title="Products" icon="pi pi-box"
+      subtitle="Manage your store products">
+      <button pButton pRipple label="New" icon="pi pi-plus" class="p-button-success"
+      (click)="openNew()"></button>
+      <button pButton pRipple label="Delete" icon="pi pi-trash" class="p-button-danger p-button-outlined"
+      (click)="deleteSelectedProducts()" [disabled]="!selectedProducts || !selectedProducts.length"></button>
+    </app-admin-page-header>
+
+    <div class="card">
+      @if (initialLoading()) {
+        <div class="table-loading">
+          <i class="pi pi-spin pi-spinner"></i>
+        </div>
+      } @else {
+        <div class="table-shell-content">
+          @if (tableLoading()) {
+            <div class="table-loading table-loading-overlay">
+              <i class="pi pi-spin pi-spinner"></i>
+            </div>
+          }
+          <p-table #dt [value]="products()" [rows]="10" [paginator]="true" [totalRecords]="totalRecords()" [lazy]="true"
+            (onLazyLoad)="loadProducts($event)" [globalFilterFields]="['name', 'code']" [(selection)]="selectedProducts" selectionMode="multiple"
+            [rowHover]="true" dataKey="id"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries" [showCurrentPageReport]="true">
         <ng-template pTemplate="header">
           <tr>
             <th style="width: 3rem">
@@ -36,148 +45,298 @@
               <p-tableCheckbox [value]="product"></p-tableCheckbox>
             </td>
             <td>{{product.name}}</td>
-            <td >
+            <td>
               <div class="image-container">
-                <img [src]="getMainImageUrl(product)" 
-                     [alt]="product.name"
-                     class="product-image"
-                  />
-            </div>
-                      </td>
+                <img [src]="getMainImageUrl(product)"
+                  [alt]="product.name"
+                  class="product-image" />
+              </div>
+            </td>
             <td>{{product.code}}</td>
-            <td>{{product.price | currency:'USD'}}</td>
+            <td>{{product.price | jodCurrency}}</td>
             <td>{{product.stockQuantity}}</td>
             <td>
               <button pButton pRipple icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2"
-                (click)="editProduct(product)"></button>
+              (click)="editProduct(product)"></button>
             </td>
           </tr>
         </ng-template>
-      </p-table>
+        </p-table>
+        </div>
+      }
     </div>
 
-    <p-dialog [(visible)]="productDialog" [style]="{width: '450px'}" header="Product Details" [modal]="true"
-      styleClass="p-fluid">
-      <ng-template pTemplate="content">
-        <form [formGroup]="productForm">
-          <div class="field">
-            <label for="name">Name</label>
-            <input type="text" pInputText id="name" formControlName="name" autofocus
-              [ngClass]="{'ng-invalid ng-dirty': isFieldInvalid('name')}" />
-            <small class="ng-dirty ng-invalid" *ngIf="isFieldInvalid('name')">
-              {{getFieldError('name')}}
-            </small>
+    <app-side-panel
+      [visible]="productPanelVisible()"
+      [title]="panelTitle()"
+      [subtitle]="panelSubtitle()"
+      [icon]="panelIcon()"
+      width="42rem"
+      (visibleChange)="onPanelVisibleChange($event)">
+        <form [formGroup]="productForm" class="admin-panel-form">
+        <div class="form-section-card">
+          <div class="form-section-header">
+            <span class="form-section-icon">
+              <i class="pi pi-tag"></i>
+            </span>
+            <div class="form-section-heading">
+              <h3 class="form-section-title">Basic Information</h3>
+              <p class="form-section-desc">Name, code, and product description</p>
+            </div>
           </div>
 
-          <div class="field">
-            <label for="code">Code</label>
-            <input type="text" pInputText id="code" formControlName="code"
-              [ngClass]="{'ng-invalid ng-dirty': isFieldInvalid('code')}" />
-            <small class="ng-dirty ng-invalid" *ngIf="isFieldInvalid('code')">
-              {{getFieldError('code')}}
-            </small>
+          <div class="form-section-content">
+            <div class="form-row">
+              <div class="form-field">
+                <label for="name">Product Name</label>
+                <input
+                  type="text"
+                  pInputText
+                  id="name"
+                  formControlName="name"
+                  placeholder="e.g. Wireless Headphones"
+                  class="form-control-full"
+                  [ngClass]="{'ng-invalid ng-dirty': isFieldInvalid('name')}" />
+                @if (isFieldInvalid('name')) {
+                  <small class="field-error">{{ getFieldError('name') }}</small>
+                }
+              </div>
+
+              <div class="form-field">
+                <label for="code">Product Code</label>
+                <input
+                  type="text"
+                  pInputText
+                  id="code"
+                  formControlName="code"
+                  placeholder="e.g. WH-100"
+                  class="form-control-full"
+                  [ngClass]="{'ng-invalid ng-dirty': isFieldInvalid('code')}" />
+                @if (isFieldInvalid('code')) {
+                  <small class="field-error">{{ getFieldError('code') }}</small>
+                }
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label for="description">Description</label>
+              <textarea
+                pInputTextarea
+                id="description"
+                formControlName="description"
+                rows="4"
+                placeholder="Describe the product features and benefits"
+                class="form-control-full"
+                [ngClass]="{'ng-invalid ng-dirty': isFieldInvalid('description')}">
+              </textarea>
+              @if (isFieldInvalid('description')) {
+                <small class="field-error">{{ getFieldError('description') }}</small>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section-card">
+          <div class="form-section-header">
+            <span class="form-section-icon">
+              <i class="pi pi-sitemap"></i>
+            </span>
+            <div class="form-section-heading">
+              <h3 class="form-section-title">Category & Inventory</h3>
+              <p class="form-section-desc">Organize and track stock levels</p>
+            </div>
           </div>
 
-          <div class="field">
-            <label for="description">Description</label>
-            <textarea pInputTextarea id="description" formControlName="description" rows="3"
-              [ngClass]="{'ng-invalid ng-dirty': isFieldInvalid('description')}">
-            </textarea>
-            <small class="ng-dirty ng-invalid" *ngIf="isFieldInvalid('description')">
-              {{getFieldError('description')}}
-            </small>
-          </div>
-
-          <div class="field">
-            <label for="category">Category</label>
-            <p-dropdown [options]="categories" formControlName="categoryID" optionLabel="name" optionValue="id"
-              [ngClass]="{'ng-invalid ng-dirty': isFieldInvalid('categoryID')}">
-            </p-dropdown>
-            <small class="ng-dirty ng-invalid" *ngIf="isFieldInvalid('categoryID')">
-              {{getFieldError('categoryID')}}
-            </small>
-          </div>
-
-          <div class="field">
-            <label for="price">Price</label>
-            <p-inputNumber id="price" formControlName="price" mode="currency" currency="USD" locale="en-US"
-              [ngClass]="{'ng-invalid ng-dirty': isFieldInvalid('price')}">
-            </p-inputNumber>
-            <small class="ng-dirty ng-invalid" *ngIf="isFieldInvalid('price')">
-              {{getFieldError('price')}}
-            </small>
-          </div>
-
-          <div class="field">
-            <label for="discountPrice">Discount Price</label>
-            <p-inputNumber id="discountPrice" formControlName="discountPrice" mode="currency" currency="USD"
-              locale="en-US">
-            </p-inputNumber>
-          </div>
-
-          <div class="field">
-            <label for="stock">Stock</label>
-            <p-inputNumber id="stock" formControlName="stockQuantity"
-              [ngClass]="{'ng-invalid ng-dirty': isFieldInvalid('stockQuantity')}">
-            </p-inputNumber>
-            <small class="ng-dirty ng-invalid" *ngIf="isFieldInvalid('stockQuantity')">
-              {{getFieldError('stockQuantity')}}
-            </small>
-          </div>
-
-          <div class="field">
-            <label>Product Images</label>
-            <p-fileUpload #fileUpload [multiple]="true" mode="basic" chooseLabel="Choose Images" accept="image/*"
-              [maxFileSize]="1000000" [showUploadButton]="false" [showCancelButton]="false"
-              (onSelect)="onFileSelect($event)">
-            </p-fileUpload>
-
-            <div class="uploaded-images mt-2" formArrayName="images">
-              <div *ngFor="let imageControl of imagesFormArray.controls; let i = index" [formGroupName]="i"
-                class="flex align-items-center justify-content-between p-2 border-bottom-1 surface-border"
-                [ngStyle]="{'display': imageControl.get('isDeleted')?.value ? 'none' : 'flex'}">
-
-                <div class="flex align-items-center">
-                  <img [src]="imageControl.get('imageUrl')?.value" [alt]="productForm.get('name')?.value"
-                    style="width: 50px; height: 50px; object-fit: cover;" class="mr-3" />
-                  <span>Image {{i + 1}}</span>
+          <div class="form-section-content">
+            <div class="form-row">
+              <div class="form-field">
+                <label for="category">Category</label>
+                <div class="select-field-wrapper" [class.select-field-invalid]="isFieldInvalid('categoryID')">
+                  <p-select
+                    inputId="category"
+                    [options]="categoryOptions()"
+                    formControlName="categoryID"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Select a category"
+                    emptyMessage="No categories available"
+                    [appendTo]="appendTarget"
+                    [overlayOptions]="categoryOverlayOptions"
+                    (onShow)="onCategorySelectShow()"
+                    panelStyleClass="admin-select-panel"
+                    styleClass="admin-select">
+                  </p-select>
                 </div>
+                @if (isFieldInvalid('categoryID')) {
+                  <small class="field-error">{{ getFieldError('categoryID') }}</small>
+                }
+              </div>
 
-                <div class="flex align-items-center gap-2">
-                  <button pButton pRipple type="button"
-                    [icon]="imageControl.get('isMain')?.value ? 'pi pi-star-fill' : 'pi pi-star'"
-                    [class.p-button-warning]="imageControl.get('isMain')?.value"
-                    [class.p-button-secondary]="!imageControl.get('isMain')?.value" class="p-button-sm"
-                    (click)="setMainImage(i)">
-                  </button>
-
-                  <button pButton pRipple type="button" icon="pi pi-trash" class="p-button-danger p-button-sm"
-                    (click)="removeImage(i)">
-                  </button>
-                </div>
+              <div class="form-field">
+                <label for="stock">Stock Quantity</label>
+                <p-inputnumber
+                  inputId="stock"
+                  formControlName="stockQuantity"
+                  [min]="0"
+                  placeholder="0"
+                  styleClass="form-control-full"
+                  [ngClass]="{'ng-invalid ng-dirty': isFieldInvalid('stockQuantity')}">
+                </p-inputnumber>
+                @if (isFieldInvalid('stockQuantity')) {
+                  <small class="field-error">{{ getFieldError('stockQuantity') }}</small>
+                }
               </div>
             </div>
           </div>
-        </form>
-      </ng-template>
+        </div>
 
-      <ng-template pTemplate="footer">
-        <button pButton pRipple label="Cancel" icon="pi pi-times" class="p-button-text" (click)="hideDialog()"></button>
-        <button pButton pRipple label="Save" icon="pi pi-check" class="p-button-text" (click)="saveProduct()"></button>
-      </ng-template>
-    </p-dialog>
+        <div class="form-section-card">
+          <div class="form-section-header">
+            <span class="form-section-icon">
+              <i class="pi pi-wallet"></i>
+            </span>
+            <div class="form-section-heading">
+              <h3 class="form-section-title">Pricing</h3>
+              <p class="form-section-desc">Set regular and discount prices</p>
+            </div>
+          </div>
 
-    <p-dialog [(visible)]="deleteProductsDialog" header="Confirm" [modal]="true" [style]="{width:'450px'}">
-      <div class="flex align-items-center justify-content-center">
-        <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem"></i>
-        <span>Are you sure you want to delete the selected products?</span>
+          <div class="form-section-content">
+            <div class="form-row">
+              <div class="form-field">
+                <label for="price">Regular Price</label>
+                <p-inputnumber
+                  inputId="price"
+                  formControlName="price"
+                  mode="decimal"
+                  suffix=" JOD"
+                  [minFractionDigits]="0"
+                  [maxFractionDigits]="2"
+                  [min]="0"
+                  styleClass="form-control-full"
+                  [ngClass]="{'ng-invalid ng-dirty': isFieldInvalid('price')}">
+                </p-inputnumber>
+                @if (isFieldInvalid('price')) {
+                  <small class="field-error">{{ getFieldError('price') }}</small>
+                }
+              </div>
+
+              <div class="form-field">
+                <label for="discountPrice">Discount Price</label>
+                <p-inputnumber
+                  inputId="discountPrice"
+                  formControlName="discountPrice"
+                  mode="decimal"
+                  suffix=" JOD"
+                  [minFractionDigits]="0"
+                  [maxFractionDigits]="2"
+                  [min]="0"
+                  styleClass="form-control-full">
+                </p-inputnumber>
+                <small class="field-hint">Optional sale price</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section-card">
+          <div class="form-section-header">
+            <span class="form-section-icon">
+              <i class="pi pi-images"></i>
+            </span>
+            <div class="form-section-heading">
+              <h3 class="form-section-title">Product Images</h3>
+              <p class="form-section-desc">Upload photos and set a main image</p>
+            </div>
+          </div>
+
+          <div class="form-section-content">
+            <input
+              #imageInput
+              type="file"
+              accept="image/*"
+              multiple
+              class="image-upload-input"
+              (change)="onImageInputChange($event)" />
+
+            <button type="button" class="image-upload-zone" (click)="imageInput.click()">
+              <span class="image-upload-icon">
+                <i class="pi pi-cloud-upload"></i>
+              </span>
+              <span class="image-upload-title">Click to upload images</span>
+              <span class="image-upload-hint">PNG or JPG, max 1MB each</span>
+            </button>
+
+            @if (visibleImageCount() > 0) {
+              <div class="image-gallery" formArrayName="images">
+                @for (imageControl of imagesFormArray.controls; track imageControl; let i = $index) {
+                  @if (!imageControl.get('isDeleted')?.value) {
+                    <div [formGroupName]="i" class="image-card">
+                      <img
+                        [src]="imageControl.get('imageUrl')?.value"
+                        [alt]="productForm.get('name')?.value"
+                        class="image-card-preview" />
+                      @if (imageControl.get('isMain')?.value) {
+                        <span class="image-main-badge">Main</span>
+                      }
+                      <div class="image-card-overlay">
+                        <button
+                          type="button"
+                          class="image-action-btn"
+                          [class.image-action-btn-active]="imageControl.get('isMain')?.value"
+                          (click)="setMainImage(i)">
+                          <i [ngClass]="imageControl.get('isMain')?.value ? 'pi pi-star-fill' : 'pi pi-star'"></i>
+                        </button>
+                        <button
+                          type="button"
+                          class="image-action-btn image-action-btn-danger"
+                          (click)="removeImage(i)">
+                          <i class="pi pi-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                  }
+                }
+              </div>
+            } @else {
+              <div class="image-empty-state">
+                <i class="pi pi-image"></i>
+                <span>No images uploaded yet</span>
+              </div>
+            }
+          </div>
+        </div>
+      </form>
+
+      <div panelFooter class="admin-panel-footer">
+        <button
+          pButton
+          pRipple
+          type="button"
+          label="Cancel"
+          icon="pi pi-times"
+          class="p-button-outlined p-button-secondary"
+          [disabled]="saving()"
+          (click)="hidePanel()">
+        </button>
+        <p-button
+          [label]="saveButtonLabel()"
+          icon="pi pi-check"
+          [loading]="saving()"
+          (onClick)="saveProduct()">
+        </p-button>
       </div>
-      <ng-template pTemplate="footer">
-        <button pButton pRipple icon="pi pi-times" class="p-button-text" label="No"
-          (click)="deleteProductsDialog = false"></button>
-        <button pButton pRipple icon="pi pi-check" class="p-button-text" label="Yes"
-          (click)="confirmDeleteSelected()"></button>
-      </ng-template>
-    </p-dialog>
+    </app-side-panel>
+
+    <app-admin-confirm-panel
+      [visible]="deletePanelVisible()"
+      title="Delete Products"
+      subtitle="This action cannot be undone"
+      message="Are you sure you want to delete the selected products?"
+      confirmLabel="Delete"
+      cancelLabel="Cancel"
+      (visibleChange)="onDeletePanelVisibleChange($event)"
+      (confirmed)="confirmDeleteSelected()">
+    </app-admin-confirm-panel>
   </div>
 </div>

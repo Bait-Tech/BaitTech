@@ -10,19 +10,6 @@ namespace ECommercePlatform.Server.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameColumn(
-            name: "EnlgishName",
-            table: "Categories",
-            newName: "EnglishName",
-            schema: "dbo");
-
-            migrationBuilder.RenameColumn(
-            name: "EnlgishName",
-            table: "SubCategories",
-            newName: "EnglishName",
-            schema: "dbo");
-
-
             migrationBuilder.AlterColumn<string>(
                 name: "EnglishName",
                 table: "Categories",

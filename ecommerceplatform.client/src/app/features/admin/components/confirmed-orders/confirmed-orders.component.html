@@ -1,38 +1,90 @@
 <p-toast></p-toast>
 
+<app-admin-page-header title="Confirmed Orders" icon="pi pi-check-circle"
+  subtitle="Orders that have been confirmed">
+  <button pButton pRipple label="Delete" icon="pi pi-trash" class="p-button-danger p-button-outlined"
+    (click)="deleteSelectedOrders()" [disabled]="!selectedOrders.length"></button>
+</app-admin-page-header>
+
 <div class="card">
-  <p-toolbar styleClass="mb-4">
-    <ng-template pTemplate="left">
-      <button pButton pRipple label="Delete" icon="pi pi-trash" class="p-button-danger" (click)="deleteSelectedOrders()" [disabled]="!selectedOrders.length"></button>
-    </ng-template>
-    <ng-template pTemplate="right">
-      <div class="flex align-items-center gap-2">
-        <span class="p-input-icon-left">
-          <i class="pi pi-search"></i>
-          <input pInputText type="text" [(ngModel)]="filters.userName" (input)="onFilter()" placeholder="Search by name" />
+  <div class="orders-filter-panel">
+    <div class="orders-filter-header">
+      <div class="orders-filter-heading">
+        <span class="orders-filter-icon">
+          <i class="pi pi-filter"></i>
         </span>
-        <span class="p-input-icon-left">
-          <i class="pi pi-phone"></i>
-          <input pInputText type="text" [(ngModel)]="filters.PhoneNumber" (input)="onFilter()" placeholder="Search by phone" />
+        <div>
+          <h3 class="orders-filter-title">Filters</h3>
+          <p class="orders-filter-desc">Search orders by customer details</p>
+        </div>
+      </div>
+      @if (hasActiveFilters()) {
+        <button type="button" class="orders-filter-clear" (click)="clearFilters()">
+          <i class="pi pi-filter-slash"></i>
+          <span>Clear</span>
+        </button>
+      }
+    </div>
+
+    <div class="orders-filter-grid">
+      <div class="orders-filter-field">
+        <label for="confirmedUserNameFilter" class="orders-filter-label">Customer Name</label>
+        <span class="orders-filter-input-wrap">
+          <i class="pi pi-search orders-filter-input-icon"></i>
+          <input
+            id="confirmedUserNameFilter"
+            pInputText
+            type="text"
+            [(ngModel)]="filters.userName"
+            (input)="onFilter()"
+            placeholder="Search by name"
+            class="orders-filter-input"
+          />
         </span>
       </div>
-    </ng-template>
-  </p-toolbar>
 
-  <p-table 
-    #dt 
-    [value]="orders" 
-    [rows]="10" 
-    [paginator]="true" 
-    [totalRecords]="totalRecords"
-    [lazy]="true"
-    (onLazyLoad)="loadOrders($event)"
-    [(selection)]="selectedOrders"
-    [rowHover]="true" 
-    dataKey="orderID"
-    [loading]="loading"
-    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries" 
-    [showCurrentPageReport]="true">
+      <div class="orders-filter-field">
+        <label for="confirmedPhoneFilter" class="orders-filter-label">Phone Number</label>
+        <span class="orders-filter-input-wrap">
+          <i class="pi pi-phone orders-filter-input-icon"></i>
+          <input
+            id="confirmedPhoneFilter"
+            pInputText
+            type="text"
+            [(ngModel)]="filters.PhoneNumber"
+            (input)="onFilter()"
+            placeholder="Search by phone"
+            class="orders-filter-input"
+          />
+        </span>
+      </div>
+    </div>
+  </div>
+
+  @if (initialLoading()) {
+    <div class="table-loading">
+      <i class="pi pi-spin pi-spinner"></i>
+    </div>
+  } @else {
+    <div class="table-shell-content">
+      @if (tableLoading()) {
+        <div class="table-loading table-loading-overlay">
+          <i class="pi pi-spin pi-spinner"></i>
+        </div>
+      }
+      <p-table 
+        #dt 
+        [value]="orders()" 
+        [rows]="10" 
+        [paginator]="true" 
+        [totalRecords]="totalRecords()"
+        [lazy]="true"
+        (onLazyLoad)="loadOrders($event)"
+        [(selection)]="selectedOrders" selectionMode="multiple"
+        [rowHover]="true" 
+        dataKey="orderID"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries" 
+        [showCurrentPageReport]="true">
     
     <ng-template pTemplate="header">
       <tr>
@@ -65,27 +117,49 @@
       </tr>
     </ng-template>
   </p-table>
+    </div>
+  }
 </div>
 
-<p-dialog header="Order Products" [(visible)]="displayProductsDialog" [modal]="true" [style]="{width: '50vw'}">
-  <p-table [value]="selectedOrderProducts" [scrollable]="true" scrollHeight="400px">
-    <ng-template pTemplate="header">
-      <tr>
-        <th>Product Name</th>
-        <th>Quantity</th>
-        <th>Price</th>
-        <th>Image</th>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="body" let-product>
-      <tr>
-        <td>{{product.productName}}</td>
-        <td>{{product.productQTY}}</td>
-        <td>{{product.productPrice | currency}}</td>
-        <td>
-          <img [src]="product.productImage" [alt]="product.productName" width="50" class="shadow-2" />
-        </td>
-      </tr>
-    </ng-template>
-  </p-table>
-</p-dialog>
+<app-side-panel
+  [visible]="productsPanelVisible()"
+  [title]="productsPanelTitle()"
+  subtitle="Products included in this order"
+  icon="pi pi-shopping-cart"
+  width="42rem"
+  (visibleChange)="onProductsPanelVisibleChange($event)">
+  <div class="panel-table-shell">
+    <p-table [value]="selectedOrderProducts()" [scrollable]="true" scrollHeight="400px">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Product Name</th>
+          <th>Quantity</th>
+          <th>Price</th>
+          <th>Image</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-product>
+        <tr>
+          <td>{{ product.productName }}</td>
+          <td>{{ product.productQTY }}</td>
+          <td>{{ product.productPrice | jodCurrency }}</td>
+          <td>
+            <img [src]="product.productImage" [alt]="product.productName" class="order-product-image" />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <div panelFooter class="admin-panel-footer">
+    <button
+      pButton
+      pRipple
+      type="button"
+      label="Close"
+      icon="pi pi-times"
+      class="p-button-outlined p-button-secondary"
+      (click)="hideProductsPanel()">
+    </button>
+  </div>
+</app-side-panel>

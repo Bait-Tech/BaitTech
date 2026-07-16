@@ -1,5 +1,15 @@
-<app-hero-section></app-hero-section>
+<div class="home-page">
+  <app-hero-section [heroImages]="heroImages()"></app-hero-section>
 
-<app-categories-section></app-categories-section>
+  <div class="home-content">
+    @if (categories().length > 0) {
+      <app-categories-section [categories]="categories()"></app-categories-section>
+    }
 
-<app-products-section></app-products-section>
+    @for (section of productsSections(); track section.id) {
+      @if (section.hasProducts) {
+        <app-products-section [section]="section"></app-products-section>
+      }
+    }
+  </div>
+</div>

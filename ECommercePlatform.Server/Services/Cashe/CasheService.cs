@@ -1,5 +1,4 @@
-﻿using ECommercePlatform.Server.Data;
-using StackExchange.Redis;
+﻿using StackExchange.Redis;
 using System.Text.Json;
 
 namespace ECommercePlatform.Server.Services.Cashe
@@ -7,10 +6,10 @@ namespace ECommercePlatform.Server.Services.Cashe
     public class CasheService : ICasheService
     {
         private readonly IDatabase _CasheDatabase;
-        public CasheService()
+
+        public CasheService(IConnectionMultiplexer connectionMultiplexer)
         {
-            var redis = ConnectionMultiplexer.Connect("localhost:6379");
-            _CasheDatabase = redis.GetDatabase();
+            _CasheDatabase = connectionMultiplexer.GetDatabase();
         }
 
         public T GetData<T>(string key)

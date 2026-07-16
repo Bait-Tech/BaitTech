@@ -1,34 +1,48 @@
-<div class="hero-carousel-container" *ngIf="heroSection">
-  <div id="smartwatchCarousel" class="carousel slide" data-bs-ride="carousel">
-    <div class="carousel-inner">
-      <div class="carousel-item" *ngFor="let image of heroSection.heroSectionImageDTOs; let i = index" [class.active]="image.isMain">
-        <div class="carousel-image-container">
-          <a [href]="image.linkUrl" *ngIf="image.linkUrl">
-            <img [src]="image.imageUrl" class="d-block carousel-img" alt="Smartwatch Collection">
-          </a>
-          <img *ngIf="!image.linkUrl" [src]="image.imageUrl" class="d-block carousel-img" alt="Smartwatch Collection">
+@if (hasHeroImages()) {
+  <section class="hero-section">
+    <div class="hero-carousel-container">
+      <div id="homeHeroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
+        <div class="carousel-inner">
+          @for (image of heroImages(); track image.id; let i = $index) {
+            <div class="carousel-item" [class.active]="i === initialActiveIndex()">
+              <div class="carousel-image-container">
+                @if (image.linkUrl) {
+                  <a [href]="image.linkUrl" class="carousel-link">
+                    <img [src]="image.imageUrl" class="carousel-img" alt="Hero banner">
+                  </a>
+                }
+                @if (!image.linkUrl) {
+                  <img [src]="image.imageUrl" class="carousel-img" alt="Hero banner">
+                }
+              </div>
+            </div>
+          }
         </div>
+
+        @if (heroImages().length > 1) {
+          <div class="carousel-indicators custom-indicators">
+            @for (image of heroImages(); track image.id; let i = $index) {
+              <button
+                type="button"
+                data-bs-target="#homeHeroCarousel"
+                [attr.data-bs-slide-to]="i"
+                [class.active]="i === initialActiveIndex()"
+                [attr.aria-current]="i === initialActiveIndex() ? 'true' : null"
+                [attr.aria-label]="'Slide ' + (i + 1)">
+              </button>
+            }
+          </div>
+
+          <button class="carousel-control-prev carousel-nav-btn" type="button" data-bs-target="#homeHeroCarousel" data-bs-slide="prev">
+            <i class="bi bi-chevron-left"></i>
+            <span class="visually-hidden">Previous</span>
+          </button>
+          <button class="carousel-control-next carousel-nav-btn" type="button" data-bs-target="#homeHeroCarousel" data-bs-slide="next">
+            <i class="bi bi-chevron-right"></i>
+            <span class="visually-hidden">Next</span>
+          </button>
+        }
       </div>
     </div>
-    
-    <div class="carousel-indicators custom-indicators">
-      <button *ngFor="let image of heroSection.heroSectionImageDTOs; let i = index" 
-              type="button" 
-              data-bs-target="#smartwatchCarousel" 
-              [attr.data-bs-slide-to]="i" 
-              [class.active]="image.isMain" 
-              aria-current="true" 
-              [attr.aria-label]="'Slide ' + (i+1)">
-      </button>
-    </div>
-    
-    <button class="carousel-control-prev carousel-nav-btn" type="button" data-bs-target="#smartwatchCarousel" data-bs-slide="prev">
-      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-      <span class="visually-hidden">Previous</span>
-    </button>
-    <button class="carousel-control-next carousel-nav-btn" type="button" data-bs-target="#smartwatchCarousel" data-bs-slide="next">
-      <span class="carousel-control-next-icon" aria-hidden="true"></span>
-      <span class="visually-hidden">Next</span>
-    </button>
-  </div>
-</div>
+  </section>
+}

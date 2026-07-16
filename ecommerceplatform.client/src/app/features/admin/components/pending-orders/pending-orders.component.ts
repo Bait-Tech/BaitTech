@@ -1,116 +1,284 @@
-import { Component} from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
+
 import { IOrders } from '../../interfaces/orders.interface';
+
 import { IProductsOrder } from '../../interfaces/products-order.interface';
+
 import { MessageService } from 'primeng/api';
+
 import { OrdersService } from '../../services/orders.service';
+
 import { debounceTime, Subject } from 'rxjs';
+
 import { IFilterOrders } from '../../interfaces/filter-orders.interface';
 
+
+
 @Component({
-  selector: 'app-pending-orders',
-  templateUrl: './pending-orders.component.html',
-  styleUrls: ['./pending-orders.component.css'],
+
+    selector: 'app-pending-orders',
+
+    templateUrl: './pending-orders.component.html',
+
+    styleUrls: ['./pending-orders.component.css', '../shared/order-filters-panel.css'],
+
+    standalone: false
+
 })
-export class PendingOrdersComponent {
-  orders: IOrders[] = [];
+
+export class PendingOrdersComponent implements OnInit {
+
+  orders = signal<IOrders[]>([]);
+
   selectedOrders: IOrders[] = [];
-  totalRecords: number = 0;
-  loading: boolean = false;
-  displayProductsDialog: boolean = false;
-  selectedOrderProducts: IProductsOrder[] = [];
+
+  totalRecords = signal(0);
+
+  initialLoading = signal(true);
+
+  tableLoading = signal(false);
+
+  productsPanelVisible = signal(false);
+  productsPanelTitle = signal('Order Products');
+  selectedOrderProducts = signal<IProductsOrder[]>([]);
+  hasActiveFilters = signal(false);
+
   private filterSubject = new Subject<void>();
 
+
+
   filters: IFilterOrders = {
+
     paginationParams: {
+
       pageNumber: 1,
+
       pageSize: 10
+
     },
+
     userName: '',
+
     PhoneNumber: ''
+
   };
 
+
+
   constructor(
+
     private ordersService: OrdersService,
+
     private messageService: MessageService
+
   ) {
+
     this.filterSubject
+
     .pipe(
+
       debounceTime(300)
+
     )
+
     .subscribe(() => {
+
       this.loadOrders({ first: 0, rows: 10 });
+
     });
 
+
+
   }
+
+
+
+  ngOnInit(): void {
+
+    this.loadOrders({ first: 0, rows: 10 });
+
+  }
+
+
 
   loadOrders(event: any) {
-    this.loading = true;
-    const filter: IFilterOrders = {
-      paginationParams: {
-        pageNumber: event.first + 1,
-        pageSize: event.rows
-      },
-      userName: this.filters.userName,
-      PhoneNumber: this.filters.PhoneNumber
-    };
 
-    this.ordersService.getOrders(filter).subscribe({
-      next: (response) => {
-        this.orders = response?.items;
-        this.totalRecords = response?.totalCount??0;
-        this.loading = false;
-      },
-      error: (error) => {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load orders' });
-        this.loading = false;
-      }
-    });
-  }
+    if (!this.initialLoading()) {
 
-  showProducts(order: IOrders) {
-    this.selectedOrderProducts = order.productsOrderDTO;
-    this.displayProductsDialog = true;
-  }
+      this.tableLoading.set(true);
 
-  confirmSelectedOrders() {
-    if (!this.selectedOrders.length) {
-      this.messageService.add({ severity: 'warn', summary: 'Warning', detail: 'Please select orders to confirm' });
-      return;
     }
 
-    const orderIds = this.selectedOrders.map(order => order.orderID!);
-    this.ordersService.approveOrders(orderIds).subscribe({
-      next: () => {
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Orders confirmed successfully' });
-        this.loadOrders({ first: 0, rows: 10 });
-        this.selectedOrders = [];
+
+
+    const first = event?.first ?? 0;
+
+    const rows = event?.rows ?? 10;
+
+
+
+    const filter: IFilterOrders = {
+
+      paginationParams: {
+
+        pageNumber: Math.floor(first / rows) + 1,
+
+        pageSize: rows
+
       },
-      error: (error) => {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to confirm orders' });
+
+      userName: this.filters.userName,
+
+      PhoneNumber: this.filters.PhoneNumber
+
+    };
+
+
+
+    this.ordersService.getOrders(filter).subscribe({
+
+      next: (response) => {
+
+        this.orders.set(response?.items ?? []);
+
+        this.totalRecords.set(response?.totalCount ?? 0);
+
+        this.initialLoading.set(false);
+
+        this.tableLoading.set(false);
+
+      },
+
+      error: () => {
+
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load orders' });
+
+        this.initialLoading.set(false);
+
+        this.tableLoading.set(false);
+
       }
+
     });
+
   }
 
+
+
+  showProducts(order: IOrders) {
+    this.selectedOrderProducts.set(order.productsOrderDTO ?? []);
+    this.productsPanelTitle.set(`Order #${order.orderID} Products`);
+    this.productsPanelVisible.set(true);
+  }
+
+  hideProductsPanel(): void {
+    this.productsPanelVisible.set(false);
+    this.selectedOrderProducts.set([]);
+  }
+
+  onProductsPanelVisibleChange(visible: boolean): void {
+    this.productsPanelVisible.set(visible);
+    if (!visible) {
+      this.selectedOrderProducts.set([]);
+    }
+  }
+
+
+
+  confirmSelectedOrders() {
+
+    if (!this.selectedOrders.length) {
+
+      this.messageService.add({ severity: 'warn', summary: 'Warning', detail: 'Please select orders to confirm' });
+
+      return;
+
+    }
+
+
+
+    const orderIds = this.selectedOrders.map(order => order.orderID!);
+
+    this.ordersService.approveOrders(orderIds).subscribe({
+
+      next: () => {
+
+        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Orders confirmed successfully' });
+
+        this.loadOrders({ first: 0, rows: 10 });
+
+        this.selectedOrders = [];
+
+      },
+
+      error: () => {
+
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to confirm orders' });
+
+      }
+
+    });
+
+  }
+
+
+
   onFilter() {
+    this.updateActiveFilters();
     this.filterSubject.next();
   }
 
+  clearFilters() {
+    this.filters.userName = '';
+    this.filters.PhoneNumber = '';
+    this.hasActiveFilters.set(false);
+    this.filterSubject.next();
+  }
+
+  private updateActiveFilters() {
+    const hasUserName = (this.filters.userName ?? '').trim().length > 0;
+    const hasPhoneNumber = (this.filters.PhoneNumber ?? '').trim().length > 0;
+    this.hasActiveFilters.set(hasUserName || hasPhoneNumber);
+  }
+
+
+
   deleteSelectedOrders() {
+
     if (!this.selectedOrders.length) {
+
       this.messageService.add({ severity: 'warn', summary: 'Warning', detail: 'Please select orders to delete' });
+
       return;
+
     }
 
+
+
     const orderIds = this.selectedOrders.map(order => order.orderID!);
+
     this.ordersService.deleteOrders(orderIds).subscribe({
+
       next: () => {
+
         this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Orders deleted successfully' });
+
         this.loadOrders({ first: 0, rows: 10 });
+
         this.selectedOrders = [];
+
       },
-      error: (error) => {
+
+      error: () => {
+
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete orders' });
+
       }
+
     });
+
   }
+
 }
+
+

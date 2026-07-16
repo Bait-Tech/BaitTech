@@ -6,7 +6,7 @@
     justify-content: center;
     overflow: hidden;
     border-radius: 4px;
-    background-color: #f8f9fa;
+    background-color: var(--surface-200);
 }
 
 .product-image {
@@ -26,4 +26,32 @@
         width: 80px;
         height: 80px;
     }
+}
+
+.table-shell-content {
+    position: relative;
+}
+
+.table-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 12rem;
+    font-size: 2rem;
+    color: var(--primary-color);
+}
+
+.table-loading-overlay {
+    position: absolute;
+    inset: 0;
+    min-height: auto;
+    background: rgba(255, 255, 255, 0.7);
+    z-index: 2;
+}
+
+.order-product-image {
+    width: 3rem;
+    height: 3rem;
+    object-fit: cover;
+    border-radius: 8px;
 }

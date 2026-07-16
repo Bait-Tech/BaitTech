@@ -1,13 +1,49 @@
 <footer class="footer">
   <div class="container">
+    @if (companyService.hasSocialLinks()) {
       <div class="social-icons">
-          <a href="#" class="social-icon">f</a>
-          <a href="#" class="social-icon">📷</a>
-          <a href="#" class="social-icon">👻</a>
-          <a href="#" class="social-icon">📞</a>
+        @if (companyService.facebookUrl()) {
+          <a
+            [href]="companyService.facebookUrl()"
+            class="social-icon"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Facebook">
+            <i class="bi bi-facebook"></i>
+          </a>
+        }
+        @if (companyService.instagramUrl()) {
+          <a
+            [href]="companyService.instagramUrl()"
+            class="social-icon"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Instagram">
+            <i class="bi bi-instagram"></i>
+          </a>
+        }
+        @if (companyService.snapchatUrl()) {
+          <a
+            [href]="companyService.snapchatUrl()"
+            class="social-icon"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Snapchat">
+            <i class="bi bi-snapchat"></i>
+          </a>
+        }
+        @if (companyService.phoneHref()) {
+          <a
+            [href]="companyService.phoneHref()"
+            class="social-icon"
+            aria-label="Phone">
+            <i class="bi bi-telephone"></i>
+          </a>
+        }
       </div>
-      <div class="copyright">
-          Copyright All rights reserved
-      </div>
+    }
+    <div class="copyright">
+      Copyright All rights reserved
+    </div>
   </div>
 </footer>

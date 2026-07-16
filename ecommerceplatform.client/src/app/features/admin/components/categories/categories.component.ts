@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { ICategories } from '../../interfaces/categories.interface';
 import { MessageService } from 'primeng/api';
 import { CategoryService } from '../../services/category.service';
@@ -7,17 +7,21 @@ import { CategoryService } from '../../services/category.service';
   selector: 'app-categories',
   templateUrl: './categories.component.html',
   styleUrls: ['./categories.component.css'],
-  standalone:false,
+  standalone: false,
 })
 export class CategoriesComponent implements OnInit {
-  categories: ICategories[] = [];
+  categories = signal<ICategories[]>([]);
+  loading = signal(true);
   category: ICategories = { id: 0, name: '' };
   selectedCategories: ICategories[] = [];
-  categoryDialog: boolean = false;
-  deleteCategoryDialog: boolean = false;
-  deleteCategoriesDialog: boolean = false;
-  submitted: boolean = false;
-  loading: boolean = true;
+  categoryPanelVisible = signal(false);
+  deletePanelVisible = signal(false);
+  panelTitle = signal('');
+  panelSubtitle = signal('');
+  panelIcon = signal('pi pi-plus');
+  saveButtonLabel = signal('Create Category');
+  saving = signal(false);
+  submitted = false;
 
   constructor(
     private categoryService: CategoryService,
@@ -29,20 +33,20 @@ export class CategoriesComponent implements OnInit {
   }
 
   loadCategories() {
-    this.loading = true;
+    this.loading.set(true);
     this.categoryService.getCategories().subscribe({
       next: (data) => {
-        this.categories = data;
-        this.loading = false;
+        this.categories.set(data ?? []);
+        this.loading.set(false);
       },
-      error: (error) => {
+      error: () => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
           detail: 'Failed to load categories',
           life: 3000,
         });
-        this.loading = false;
+        this.loading.set(false);
       },
     });
   }
@@ -50,27 +54,41 @@ export class CategoriesComponent implements OnInit {
   openNew() {
     this.category = { id: 0, name: '' };
     this.submitted = false;
-    this.categoryDialog = true;
+    this.panelTitle.set('New Category');
+    this.panelSubtitle.set('Add a new product category');
+    this.panelIcon.set('pi pi-plus');
+    this.saveButtonLabel.set('Create Category');
+    this.categoryPanelVisible.set(true);
   }
 
   deleteSelectedCategories() {
-    this.deleteCategoriesDialog = true;
+    this.deletePanelVisible.set(true);
   }
 
   editCategory(category: ICategories) {
     this.category = { ...category };
-    this.categoryDialog = true;
+    this.submitted = false;
+    this.panelTitle.set('Edit Category');
+    this.panelSubtitle.set('Update category name and image');
+    this.panelIcon.set('pi pi-pencil');
+    this.saveButtonLabel.set('Save Changes');
+    this.categoryPanelVisible.set(true);
   }
 
-  deleteCategory(category: ICategories) {
-    this.deleteCategoryDialog = true;
-    this.category = { ...category };
+  onPanelVisibleChange(visible: boolean): void {
+    this.categoryPanelVisible.set(visible);
+    if (!visible) {
+      this.resetPanel();
+    }
+  }
+
+  onDeletePanelVisibleChange(visible: boolean): void {
+    this.deletePanelVisible.set(visible);
   }
 
   confirmDeleteSelected() {
-    this.deleteCategoriesDialog = false;
-
-    this.categoryService  
+    this.deletePanelVisible.set(false);
+    this.categoryService
       .deleteCategories(this.selectedCategories.map((c) => c.id))
       .subscribe({
         next: () => {
@@ -83,78 +101,84 @@ export class CategoriesComponent implements OnInit {
           this.selectedCategories = [];
           this.loadCategories();
         },
-        error: (error) => {
+        error: () => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
             detail: 'Failed to delete categories',
             life: 3000,
           });
-          console.error('Error deleting categories:', error);
         },
       });
   }
-  
-  hideDialog() {
-    this.categoryDialog = false;
-    this.submitted = false;
+
+  hidePanel(): void {
+    this.categoryPanelVisible.set(false);
+    this.resetPanel();
   }
 
-  onFileSelect(event: any) {
-    if (event.files && event.files.length > 0) {
-      this.category.imageFile = event.files[0];
+  onImageInputChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || !input.files.length) {
+      return;
     }
+    const file = input.files[0];
+    this.category.imageFile = file;
+    this.readImagePreview(file);
+    input.value = '';
   }
 
   saveCategory() {
     this.submitted = true;
-    if (this.category.name?.trim()) {
-      if (this.category.id) {
-        this.categoryService
-          .updateCategory(this.category)
-          .subscribe({
-            next: () => {
-              this.messageService.add({
-                severity: 'success',
-                summary: 'Successful',
-                detail: 'Category updated',
-                life: 3000,
-              });
-              this.loadCategories();
-            },
-            error: (error) => {
-              this.messageService.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: 'Failed to update category',
-                life: 3000,
-              });
-            },
-          });
-      } else {
-        this.categoryService.createCategory(this.category).subscribe({
-          next: () => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Successful',
-              detail: 'Category created',
-              life: 3000,
-            });
-            this.loadCategories();
-          },
-          error: (error) => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'Failed to create category',
-              life: 3000,
-            });
-          },
-        });
-      }
-
-      this.categoryDialog = false;
-      this.category = { id: 0, name: '' };
+    if (!this.category.name?.trim()) {
+      return;
     }
+    this.saving.set(true);
+    if (this.category.id) {
+      this.categoryService.updateCategory(this.category).subscribe({
+        next: () => this.onSaveSuccess('Category updated'),
+        error: () => this.onSaveError('Failed to update category'),
+      });
+      return;
+    }
+    this.categoryService.createCategory(this.category).subscribe({
+      next: () => this.onSaveSuccess('Category created'),
+      error: () => this.onSaveError('Failed to create category'),
+    });
+  }
+
+  private onSaveSuccess(detail: string): void {
+    this.saving.set(false);
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Successful',
+      detail,
+      life: 3000,
+    });
+    this.loadCategories();
+    this.hidePanel();
+  }
+
+  private onSaveError(detail: string): void {
+    this.saving.set(false);
+    this.messageService.add({
+      severity: 'error',
+      summary: 'Error',
+      detail,
+      life: 3000,
+    });
+  }
+
+  private readImagePreview(file: File): void {
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.category.imageUrl = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  private resetPanel(): void {
+    this.submitted = false;
+    this.category = { id: 0, name: '' };
   }
 }

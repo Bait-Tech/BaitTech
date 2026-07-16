@@ -1,33 +1,47 @@
-<div class="container">
-  <div class="products-section" *ngFor="let section of productsSections">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="mb-0">{{ section.title }}</h5>
-      <span *ngIf="section.badgeText.length > 0" class="badge" [ngStyle]="{'background-color':section.badgeColor}">
-        {{section.badgeText}}
-      </span>
-    </div>
-    <div class="row products-row">
-      <div class="col-2 col-sm-12 col-md-12" *ngFor="let product of section.products">
-        <div class="card h-100 shadow-sm border-0" (click)="goToProductPage(product.id)">
-          <img [src]="product.mainImageUrl" class="card-img-top p-3" alt="{{ product.name }}">
-          <div class="card-body p-3 pt-0">
-            <h6 class="card-title text-center">{{ product.name }}</h6>
-            <div class="d-flex justify-content-center align-items-center">
-              <span class="text-muted text-decoration-line-through me-2">{{ product.price | currency }}</span>
-              <span class="fw-bold">
-                {{ product.discountPrice != null ? (product.discountPrice | currency) : (product.price | currency) }}
-              </span>
+<section class="products-section">
+  <div class="container">
+    <div class="section-panel">
+      <div class="section-header">
+        <h2 class="section-title">{{ section().title }}</h2>
+        @if (section().badgeText) {
+          <span class="section-badge" [style.background-color]="section().badgeColor">
+            {{ section().badgeText }}
+          </span>
+        }
+      </div>
+
+      <div class="products-track">
+        @for (product of section().products; track product.id) {
+          <article class="product-card" (click)="goToProductPage(product.id)">
+            <div class="product-image-wrap">
+              <img [src]="product.mainImageUrl" [alt]="product.name" class="product-image">
+              @if (product.hasDiscount) {
+                <span class="product-discount-badge">-{{ product.discountPercent }}%</span>
+              }
+              @if (product.outOfStock) {
+                <span class="product-stock-badge">Out of Stock</span>
+              }
             </div>
-            <div class="d-grid gap-2 mt-3">
+
+            <div class="product-body">
+              <div class="product-pricing">
+                <span class="product-price">{{ product.displayPrice | jodCurrency }}</span>
+                @if (product.hasDiscount) {
+                  <span class="product-original-price">{{ product.originalPrice | jodCurrency }}</span>
+                }
+              </div>
+              <h3 class="product-name">{{ product.name }}</h3>
               <button
-                class="btn btn-info text-white"
-                (click)="addToCart(product); $event.stopPropagation()">
+                type="button"
+                class="product-cart-btn"
+                [disabled]="product.outOfStock"
+                (click)="addToCart(product, $event)">
                 Add To Cart
               </button>
             </div>
-          </div>
-        </div>
+          </article>
+        }
       </div>
     </div>
   </div>
-</div>
+</section>

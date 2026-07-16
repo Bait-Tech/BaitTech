@@ -1,70 +1,194 @@
-<div class="container mt-5" *ngIf="product">
-  <div class="row">
-    <div class="col-md-6">
-      <div class="product-main-image mb-3">
-        <div class="zoom-container" #zoomContainer (mousemove)="onImageZoom($event, zoomContainer)"
-          (mouseleave)="resetZoom()">
-          <img [src]="mainImageUrl" class="product-img" [alt]="product.name">
-        </div>
-      </div>
-
-      <div class="d-flex justify-content-start thumbnail-container">
-        <div *ngFor="let image of product.images; let i = index" class="mx-1">
-          <img src="{{image.imageUrl}}" class="img-thumbnail" [class.border-primary]="i === selectedImageIndex"
-            style="width: 80px; height: 80px; cursor: pointer; object-fit: cover;" alt="{{product.name}}"
-            (click)="changeMainImage(i)">
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-6">
-      <h2 class="fw-bold">{{product.name}}</h2>
-
-      <div class="mb-3">
-        <span class="text-muted">{{product.code}}</span>
-      </div>
-
-      <div class="mb-4">
-        <h5>Description</h5>
-        <p>{{product.description}}</p>
-      </div>
-
-      <div class="d-flex align-items-center mb-4">
-        <span *ngIf="product.discountPrice" class="text-decoration-line-through text-muted me-2">
-          {{product.price}} JOD
-        </span>
-        <span class="text-primary fs-4 fw-bold">
-          <ng-container *ngIf="product.discountPrice">{{product.discountPrice}}</ng-container>
-          <ng-container *ngIf="!product.discountPrice">{{product.price}}</ng-container>
-          JOD
-        </span>
-      </div>
-
-      <div class="mb-4">
-        <label class="form-label fw-bold">Quantity</label>
-        <div class="input-group" style="max-width: 150px;" [class.disabled]="product.stockQuantity == 0">
-          <button class="btn btn-outline-secondary" type="button" (click)="decrementQuantity()"
-            [disabled]="quantity <= 1 || product.stockQuantity == 0">−</button>
-          <input type="number" class="form-control text-center" [value]="quantity"
-            [disabled]="product.stockQuantity == 0" (change)="updateQuantity($event)" min="1"
-            [max]="product.stockQuantity">
-          <button class="btn btn-outline-secondary" type="button" (click)="incrementQuantity()"
-            [disabled]="quantity >= product.stockQuantity || product.stockQuantity == 0">+</button>
-        </div>
-      </div>
-
-
-      <button class="btn btn-info text-white px-4 py-2 mb-3" (click)="addToCart()"
-        [disabled]="product.stockQuantity == 0">
-        Add To Cart
+<div class="product-details-page">
+  <section class="page-header">
+    <div class="container">
+      <button type="button" class="back-link" (click)="goBack()">
+        <i class="bi bi-arrow-left"></i>
+        Back to Products
       </button>
 
-      <div *ngIf="product.stockQuantity > 0" class="mt-2 text-success">
-        <i class="bi bi-check-circle-fill"></i> In Stock ({{product.stockQuantity}} available)
-      </div>
-      <div *ngIf="product.stockQuantity <= 0" class="mt-2 text-danger">
-        <i class="bi bi-x-circle-fill"></i> Out of Stock
-      </div>
+      @if (productView()) {
+        <h1 class="page-title">{{ productView()!.product.name }}</h1>
+        <p class="page-subtitle">{{ productView()!.product.code }}</p>
+      }
+
+      @if (!productView() && !loading() && !loadError()) {
+        <h1 class="page-title">Product Details</h1>
+      }
     </div>
+  </section>
+
+  <div class="container page-body">
+    @if (loading()) {
+      <div class="state-panel">
+        <div class="state-spinner"></div>
+        <p class="state-text">Loading product...</p>
+      </div>
+    }
+
+    @if (loadError()) {
+      <div class="state-panel">
+        <i class="bi bi-exclamation-circle state-icon"></i>
+        <p class="state-text">Failed to load product</p>
+        <button type="button" class="state-action" (click)="retryLoad()">Try Again</button>
+      </div>
+    }
+
+    @if (productView(); as view) {
+      <div class="product-layout">
+        <section class="gallery-panel">
+          <div class="main-image-wrap">
+            <img [src]="mainImageUrl()" [alt]="view.product.name" class="main-image">
+            @if (view.hasDiscount) {
+              <span class="discount-badge">-{{ view.discountPercent }}%</span>
+            }
+          </div>
+
+          @if (view.images.length > 1) {
+            <div class="thumbnail-track">
+              @for (image of view.images; track image.id; let i = $index) {
+                <button
+                  type="button"
+                  class="thumbnail-btn"
+                  [class.active]="selectedImageIndex() === i"
+                  (click)="selectImage(i)">
+                  <img [src]="image.imageUrl" [alt]="view.product.name" class="thumbnail-image">
+                </button>
+              }
+            </div>
+          }
+        </section>
+
+        <section class="info-panel">
+          <div class="info-card">
+            <div class="info-header">
+              <div class="info-badges">
+                @if (view.hasDiscount) {
+                  <span class="info-badge discount">Save {{ view.discountPercent }}%</span>
+                }
+                @if (view.lowStock) {
+                  <span class="info-badge warning">Low Stock</span>
+                }
+                @if (view.outOfStock) {
+                  <span class="info-badge danger">Sold Out</span>
+                }
+              </div>
+              <h2 class="info-title">{{ view.product.name }}</h2>
+              <p class="info-code">SKU: {{ view.product.code }}</p>
+            </div>
+
+            <div class="pricing-card">
+              <div class="pricing-top">
+                <div class="pricing-main">
+                  <span class="current-price">{{ view.displayPrice | jodCurrency }}</span>
+                  @if (view.hasDiscount) {
+                    <span class="original-price">{{ view.originalPrice | jodCurrency }}</span>
+                  }
+                </div>
+                @if (view.hasDiscount) {
+                  <span class="savings-tag">You save {{ view.savingsAmount | jodCurrency }}</span>
+                }
+              </div>
+
+              <div class="pricing-meta">
+                <div class="meta-item">
+                  <i class="bi bi-tag"></i>
+                  <span>Unit Price</span>
+                  <strong>{{ view.displayPrice | jodCurrency }}</strong>
+                </div>
+                <div class="meta-item">
+                  <i class="bi bi-box-seam"></i>
+                  <span>Quantity</span>
+                  <strong>{{ quantity() }}</strong>
+                </div>
+                <div class="meta-item highlight">
+                  <i class="bi bi-cash-stack"></i>
+                  <span>Total</span>
+                  <strong>{{ lineTotal() | jodCurrency }}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="description-block">
+              <h3 class="section-label">Description</h3>
+              <p class="description-text">{{ view.product.description }}</p>
+            </div>
+
+            <div class="purchase-block">
+              <div class="quantity-row">
+                <span class="section-label">Quantity</span>
+                <div class="quantity-control" [class.disabled]="view.outOfStock">
+                  <button
+                    type="button"
+                    class="quantity-btn"
+                    [disabled]="!canDecrement()"
+                    (click)="decrementQuantity()">
+                    −
+                  </button>
+                  <input
+                    type="number"
+                    class="quantity-input"
+                    [value]="quantity()"
+                    [disabled]="view.outOfStock"
+                    [max]="quantityMax()"
+                    min="1"
+                    (change)="onQuantityInput($event)" />
+                  <button
+                    type="button"
+                    class="quantity-btn"
+                    [disabled]="!canIncrement()"
+                    (click)="incrementQuantity()">
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <div class="action-row">
+                <button
+                  type="button"
+                  class="add-cart-btn"
+                  [disabled]="view.outOfStock"
+                  (click)="addToCart()">
+                  <i class="bi bi-cart-plus"></i>
+                  Add To Cart
+                </button>
+                <button type="button" class="view-cart-btn" (click)="goToCart()">
+                  <i class="bi bi-bag"></i>
+                  View Cart
+                </button>
+              </div>
+
+              @if (!view.outOfStock) {
+                <p class="stock-status in-stock">
+                  <i class="bi bi-check-circle-fill"></i>
+                  In Stock — {{ view.stockQuantity }} available
+                </p>
+              }
+
+              @if (view.outOfStock) {
+                <p class="stock-status out-of-stock">
+                  <i class="bi bi-x-circle-fill"></i>
+                  Out of Stock
+                </p>
+              }
+            </div>
+
+            <div class="info-highlights">
+              <div class="highlight-item">
+                <i class="bi bi-shield-check"></i>
+                <span>Secure Checkout</span>
+              </div>
+              <div class="highlight-item">
+                <i class="bi bi-lightning-charge"></i>
+                <span>Fast Delivery</span>
+              </div>
+              <div class="highlight-item">
+                <i class="bi bi-arrow-repeat"></i>
+                <span>Easy Returns</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    }
   </div>
 </div>

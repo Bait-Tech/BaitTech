@@ -17,7 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<JWT>(builder.Configuration.GetSection("JWT"));
 
 
-builder.Services.AddCrudServices();
+builder.Services.AddCrudServices(builder.Configuration);
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -29,6 +29,7 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
     });
 
 
@@ -85,6 +86,11 @@ builder.Services.AddAuthorization();
 
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    await DatabaseSeeder.SeedAsync(scope.ServiceProvider);
+}
 
 
 var webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");

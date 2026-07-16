@@ -1,0 +1,357 @@
+.admin-panel-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-section-card {
+    background: var(--surface-card);
+    border: 1px solid var(--surface-border);
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.form-section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.875rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--surface-border);
+    background: var(--surface-card);
+}
+
+.form-section-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 10px;
+    background: var(--highlight-bg);
+    color: var(--primary-color);
+    font-size: 0.95rem;
+    flex: 0 0 auto;
+}
+
+.form-section-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.form-section-title {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.form-section-desc {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--text-color-secondary);
+}
+
+.form-section-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 0;
+}
+
+.form-field label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.form-control-full {
+    width: 100%;
+}
+
+.field-error {
+    font-size: 0.75rem;
+    color: var(--red-500, #ef4444);
+}
+
+.field-hint {
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+}
+
+.admin-panel-form :is(p-inputnumber) {
+    display: block;
+    width: 100%;
+}
+
+.select-field-wrapper {
+    width: 100%;
+}
+
+.select-field-wrapper ::ng-deep .admin-select {
+    width: 100%;
+    min-height: 2.75rem;
+    border-radius: 10px;
+    align-items: center;
+}
+
+.select-field-wrapper ::ng-deep .admin-select .p-select-label {
+    padding: 0.625rem 0.875rem;
+    line-height: 1.25;
+}
+
+.select-field-wrapper ::ng-deep .admin-select .p-select-dropdown {
+    width: 2.5rem;
+}
+
+.select-field-wrapper.select-field-invalid ::ng-deep .admin-select {
+    border-color: var(--red-500, #ef4444);
+}
+
+::ng-deep .admin-select-panel {
+    z-index: 1200;
+    border-radius: 12px;
+    margin-top: 0.25rem;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+::ng-deep .admin-select-panel .p-select-option {
+    padding: 0.625rem 0.875rem;
+}
+
+.image-upload-input {
+    display: none;
+}
+
+.image-upload-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    width: 100%;
+    padding: 1.5rem 1rem;
+    border: 2px dashed var(--surface-border);
+    border-radius: 12px;
+    background: var(--surface-ground);
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.image-upload-zone:hover {
+    border-color: var(--primary-color);
+    background: var(--highlight-bg);
+}
+
+.image-upload-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: var(--surface-card);
+    color: var(--primary-color);
+    font-size: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.image-upload-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.image-upload-hint {
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+}
+
+.image-preview-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem;
+    border: 1px solid var(--surface-border);
+    border-radius: 12px;
+    background: var(--surface-ground);
+}
+
+.image-preview-card img {
+    max-width: 100%;
+    max-height: 10rem;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.image-gallery {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+.image-card {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--surface-border);
+    background: var(--surface-ground);
+}
+
+.image-card-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-main-badge {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: var(--primary-color);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    z-index: 1;
+}
+
+.image-card-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: rgba(15, 23, 42, 0.55);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.image-card:hover .image-card-overlay {
+    opacity: 1;
+}
+
+.image-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.image-action-btn:hover {
+    background: #fff;
+}
+
+.image-action-btn-active {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+.image-action-btn-danger:hover {
+    background: var(--red-500, #ef4444);
+    color: #fff;
+}
+
+.image-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1.5rem;
+    border-radius: 12px;
+    background: var(--surface-ground);
+    color: var(--text-color-secondary);
+    font-size: 0.8125rem;
+}
+
+.image-empty-state i {
+    font-size: 1.5rem;
+    opacity: 0.5;
+}
+
+.admin-panel-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.confirm-panel-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 0.25rem 0;
+}
+
+.confirm-panel-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 12px;
+    background: rgba(245, 158, 11, 0.12);
+    color: #f59e0b;
+    font-size: 1.35rem;
+    flex: 0 0 auto;
+}
+
+.confirm-panel-message {
+    margin: 0.35rem 0 0;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--text-color);
+}
+
+.panel-table-shell {
+    border: 1px solid var(--surface-border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--surface-card);
+}
+
+.order-product-image {
+    width: 3rem;
+    height: 3rem;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+@media (max-width: 576px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .image-gallery {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}

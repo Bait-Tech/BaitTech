@@ -1,0 +1,25 @@
+.layout-wrapper.layout-static {
+  --client-bg: #0c0c0c;
+  --client-surface: #141414;
+  --client-surface-elevated: #1a1a1a;
+  --client-card: #1e1e1e;
+  --client-card-hover: #262626;
+  --client-border: rgba(255, 255, 255, 0.1);
+  --client-border-subtle: rgba(255, 255, 255, 0.06);
+  --client-text: #ffffff;
+  --client-text-secondary: rgba(255, 255, 255, 0.78);
+  --client-text-muted: rgba(255, 255, 255, 0.5);
+  --client-accent: #00d7c3;
+  --client-accent-hover: #00b8a8;
+  --client-accent-glow: rgba(0, 215, 195, 0.22);
+  --client-image-bg: #ffffff;
+  --client-danger: #e63946;
+
+  background: var(--client-bg);
+  color: var(--client-text);
+  min-height: 100vh;
+
+  .content-wrapper {
+    background: var(--client-bg);
+  }
+}

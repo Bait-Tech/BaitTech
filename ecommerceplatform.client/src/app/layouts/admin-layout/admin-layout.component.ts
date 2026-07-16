@@ -1,4 +1,4 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit, Renderer2, DOCUMENT } from '@angular/core';
 import { LayoutService } from '../services/app.layout.service';
 import { AdminAsideMenuComponent } from './components/admin-aside-menu/admin-aside-menu.component';
 import { CommonModule } from '@angular/common';
@@ -6,19 +6,35 @@ import { RouterModule } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
-  selector: 'app-admin-layout',
-  templateUrl: './admin-layout.component.html',
-  styleUrls: ['./admin-layout.component.css'],
-  standalone:true,
-  imports: [CommonModule, RouterModule, AdminAsideMenuComponent],
+    selector: 'app-admin-layout',
+    templateUrl: './admin-layout.component.html',
+    styleUrls: ['./admin-layout.component.css'],
+    standalone: true,
+    imports: [CommonModule, RouterModule, AdminAsideMenuComponent]
 })
-export class AdminLayoutComponent implements OnDestroy {
+export class AdminLayoutComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
-  constructor(public layoutService: LayoutService) {
+  constructor(
+    public layoutService: LayoutService,
+    private renderer: Renderer2,
+    @Inject(DOCUMENT) private document: Document
+  ) {
     this.layoutService.stateChange$
       .pipe(takeUntil(this.destroy$))
       .subscribe();
+  }
+
+  ngOnInit(): void {
+    this.enableAdminTheme();
+  }
+
+  private enableAdminTheme(): void {
+    this.renderer.addClass(this.document.body, 'admin-theme');
+  }
+
+  private disableAdminTheme(): void {
+    this.renderer.removeClass(this.document.body, 'admin-theme');
   }
 
   get containerClass(): Record<string, boolean> {
@@ -37,6 +53,7 @@ export class AdminLayoutComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.disableAdminTheme();
     this.destroy$.next();
     this.destroy$.complete();
   }

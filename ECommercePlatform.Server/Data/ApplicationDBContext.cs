@@ -2,6 +2,7 @@
 using ECommercePlatform.Server.Entities.Identity;
 using ECommercePlatform.Server.Entities.Main;
 using ECommercePlatform.Server.Entities.Orders;
+using ECommercePlatform.Server.Entities.Settings;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,5 +25,6 @@ namespace ECommercePlatform.Server.Data
         public DbSet<SectionProducts> SectionProducts { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<ProductsOrders> ProductsOrders { get; set; }
+        public DbSet<CompanySettings> CompanySettings { get; set; }
     }
 }

@@ -1,64 +1,68 @@
-<div class="modal-backdrop" (click)="onClose()"></div>
-<div class="modal-dialog">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h5 class="modal-title">Complete Your Order</h5>
-      <button type="button" class="btn-close" (click)="onClose()"></button>
+<div class="order-modal-backdrop" (click)="onClose()"></div>
+<div class="order-modal-dialog">
+  <div class="order-modal-content">
+    <div class="order-modal-header">
+      <h5 class="order-modal-title">Complete Your Order</h5>
+      <button type="button" class="order-modal-close" (click)="onClose()" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
     </div>
-    <div class="modal-body">
+    <div class="order-modal-body">
       <form [formGroup]="orderForm" (ngSubmit)="onSubmit()">
-        <div class="mb-3">
-          <label for="userName" class="form-label">Full Name</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            id="userName" 
+        <div class="order-field">
+          <label for="userName" class="order-label">Full Name</label>
+          <input
+            type="text"
+            class="order-input"
+            id="userName"
             formControlName="userName"
-            [ngClass]="{'is-invalid': formControls['userName'].touched && formControls['userName'].invalid}"
-          >
-          <div class="invalid-feedback" *ngIf="formControls['userName'].touched && formControls['userName'].errors?.['required']">
-            Name is required
-          </div>
-          <div class="invalid-feedback" *ngIf="formControls['userName'].touched && formControls['userName'].errors?.['minlength']">
-            Name must be at least 3 characters
-          </div>
+            [class.order-input-invalid]="userNameInvalid || userNameMinLengthInvalid"
+            (input)="onUserNameInput()" />
+          @if (userNameInvalid) {
+            <div class="order-error">Name is required</div>
+          }
+          @if (userNameMinLengthInvalid) {
+            <div class="order-error">Name must be at least 3 characters</div>
+          }
         </div>
-        
-        <div class="mb-3">
-          <label for="location" class="form-label">Delivery Address</label>
-          <textarea 
-            class="form-control" 
-            id="location" 
-            rows="3" 
+
+        <div class="order-field">
+          <label for="location" class="order-label">Delivery Address</label>
+          <textarea
+            class="order-input order-textarea"
+            id="location"
+            rows="3"
             formControlName="location"
-            [ngClass]="{'is-invalid': formControls['location'].touched && formControls['location'].invalid}"
-          ></textarea>
-          <div class="invalid-feedback" *ngIf="formControls['location'].touched && formControls['location'].errors?.['required']">
-            Delivery address is required
-          </div>
+            [class.order-input-invalid]="locationInvalid"
+            (input)="onLocationInput()"></textarea>
+          @if (locationInvalid) {
+            <div class="order-error">Delivery address is required</div>
+          }
         </div>
-        
-        <div class="mb-3">
-          <label for="phoneNumber" class="form-label">Phone Number</label>
-          <input 
-            type="tel" 
-            class="form-control" 
-            id="phoneNumber" 
+
+        <div class="order-field">
+          <label for="phoneNumber" class="order-label">Phone Number</label>
+          <input
+            type="tel"
+            class="order-input"
+            id="phoneNumber"
             formControlName="phoneNumber"
-            [ngClass]="{'is-invalid': formControls['phoneNumber'].touched && formControls['phoneNumber'].invalid}"
-          >
-          <div class="invalid-feedback" *ngIf="formControls['phoneNumber'].touched && formControls['phoneNumber'].errors?.['required']">
-            Phone number is required
-          </div>
-          <div class="invalid-feedback" *ngIf="formControls['phoneNumber'].touched && formControls['phoneNumber'].errors?.['pattern']">
-            Please enter a valid phone number
-          </div>
+            [class.order-input-invalid]="phoneNumberInvalid || phoneNumberPatternInvalid"
+            (input)="onPhoneNumberInput()" />
+          @if (phoneNumberInvalid) {
+            <div class="order-error">Phone number is required</div>
+          }
+          @if (phoneNumberPatternInvalid) {
+            <div class="order-error">Please enter a valid phone number</div>
+          }
         </div>
-        
-        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-          <button type="button" class="btn btn-secondary me-md-2" (click)="onClose()">Cancel</button>
-          <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
-            <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+
+        <div class="order-actions">
+          <button type="button" class="order-btn order-btn-secondary" (click)="onClose()">Cancel</button>
+          <button type="submit" class="order-btn order-btn-primary" [disabled]="isSubmitting">
+            @if (isSubmitting) {
+              <span class="order-spinner"></span>
+            }
             Complete Order
           </button>
         </div>

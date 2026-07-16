@@ -1,16 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
+import { CompanyService } from '../../../../shared/services/company.service';
 
 @Component({
   selector: 'app-footer',
   templateUrl: './footer.component.html',
   styleUrls: ['./footer.component.css'],
-  standalone:true
+  standalone: true
 })
-export class FooterComponent implements OnInit {
-
-  constructor() { }
-
-  ngOnInit() {
-  }
-
+export class FooterComponent {
+  constructor(public companyService: CompanyService) {}
 }

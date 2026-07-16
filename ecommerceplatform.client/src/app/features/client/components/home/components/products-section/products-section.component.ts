@@ -1,11 +1,12 @@
-import { Component, OnInit } from '@angular/core';
-import { IProductsSection } from '../../../../../admin/interfaces/products-section.interface';
-import { ProductsSectionService } from '../../../../../admin/services/products-section.service';
-import { ISectionProducts } from '../../../../../admin/interfaces/section-products.interface';
+import { Component, input } from '@angular/core';
 import { Router } from '@angular/router';
 import { IProducts } from '../../../../../admin/interfaces/products.interface';
-import { ICartState } from '../../../../interfaces/cart-interface';
 import { CartService } from '../../../../state-services/cart.service';
+import { ICartState } from '../../../../interfaces/cart-interface';
+import {
+  IHomeProductCard,
+  IHomeProductsSection,
+} from '../../../../interfaces/home-product-card.interface';
 
 @Component({
   selector: 'app-products-section',
@@ -13,66 +14,33 @@ import { CartService } from '../../../../state-services/cart.service';
   styleUrls: ['./products-section.component.css'],
   standalone: false,
 })
-export class ProductsSectionComponent implements OnInit {
-  productsSections: IProductsSection[] | undefined;
+export class ProductsSectionComponent {
+  section = input.required<IHomeProductsSection>();
 
   constructor(
-    private productsSectionService: ProductsSectionService,
     private router: Router,
     private cartService: CartService
   ) {}
 
-  ngOnInit() {
-    this.getProductsSections();
-  }
-
-  getProductsSections() {
-    this.productsSectionService
-      .getAll()
-      .subscribe((productsSection: IProductsSection[]) => {
-        this.productsSections = productsSection.map((section) => ({
-          ...section,
-          products: section.products.map((product) => ({
-            ...product,
-            mainImageUrl: this.getProductMainImage(product),
-          })),
-        }));
-      });
-  }
-
-  getProductMainImage(product: ISectionProducts): string {
-    if (product.mainImageUrl) {
-      return product.mainImageUrl;
-    }
-
-    if (product.images && product.images.length > 0) {
-      const mainImage = product.images.find((img) => img.isMain);
-      if (mainImage) {
-        return mainImage.imageUrl;
-      }
-      return product.images[0].imageUrl;
-    }
-
-    return 'assets/placeholder-image.png';
-  }
-
-  goToProductPage(id?: number) {
-    if (id == 0 || id == null) {
+  goToProductPage(productId: number) {
+    if (productId <= 0) {
       return;
     }
 
-    this.router.navigate(['/product-details', id]);
+    this.router.navigate(['/product-details', productId]);
   }
 
-  addToCart(product: IProducts): void {
-    if (!product || product.stockQuantity === 0) {
+  addToCart(card: IHomeProductCard, event: Event) {
+    event.stopPropagation();
+
+    if (card.outOfStock) {
       return;
     }
 
     const cartItem: ICartState = {
-      productID: product.id,
+      productID: card.id,
       qty: 1,
-      product: product,
+      product: card.product as IProducts,
     };
 
     this.cartService.addToCart(cartItem);

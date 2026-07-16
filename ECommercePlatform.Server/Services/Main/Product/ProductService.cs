@@ -327,17 +327,7 @@ namespace ECommercePlatform.Server.Services.Main.Product
                     return false;
                 }
 
-                if (product.ProductImages != null)
-                {
-                    foreach (var image in product.ProductImages)
-                    {
-                        if (!string.IsNullOrEmpty(image.ImageUrl))
-                        {
-                            await _imageHelper.DeleteImage(image.ImageUrl);
-                        }
-                    }
-                }
-
+                await RemoveProductImagesAsync(product.ProductImages);
                 _context.Products.Remove(product);
                 await _context.SaveChangesAsync();
 
@@ -357,28 +347,18 @@ namespace ECommercePlatform.Server.Services.Main.Product
             try
             {
                 var products = await _context
-                .Products
-                .Where(c => productIds.Contains(c.ID))
-                .ToListAsync();
+                    .Products
+                    .Include(p => p.ProductImages)
+                    .Where(c => productIds.Contains(c.ID))
+                    .ToListAsync();
 
                 foreach (var product in products)
                 {
-                    if (product.ProductImages != null)
-                    {
-                        foreach (var image in product.ProductImages)
-                        {
-                            if (!string.IsNullOrEmpty(image.ImageUrl))
-                            {
-                                await _imageHelper.DeleteImage(image.ImageUrl);
-                            }
-                        }
-                    }
+                    await RemoveProductImagesAsync(product.ProductImages);
                 }
 
                 _context.RemoveRange(products);
-
                 await _context.SaveChangesAsync();
-
                 await transaction.CommitAsync();
 
                 return true;
@@ -389,6 +369,24 @@ namespace ECommercePlatform.Server.Services.Main.Product
                 throw;
             }
 
+        }
+
+        private async Task RemoveProductImagesAsync(ICollection<ProductImage>? images)
+        {
+            if (images == null || images.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var image in images)
+            {
+                if (!string.IsNullOrEmpty(image.ImageUrl))
+                {
+                    await _imageHelper.DeleteImage(image.ImageUrl);
+                }
+            }
+
+            _context.ProductImages.RemoveRange(images);
         }
     }
 }

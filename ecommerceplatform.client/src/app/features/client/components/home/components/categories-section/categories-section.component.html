@@ -1,16 +1,21 @@
-<div class="container mt-4">
-  <div class="d-flex justify-content-between">
-    <h2 class="mb-4">Our Best Categories</h2>
-    <a class="see-all" (click)="onSeeAllClick()">See All</a>
-  </div>
-  <div class="row categories-row">
-    <div class="col-2 col-sm-3 col-md-2 col-lg-1-5 mb-4" *ngFor="let category of categories">
-      <div class="text-center">
-        <div class="category-icon-bg mb-2">
-          <img [src]="category.imageUrl" [alt]="category.name" class="category-icon">
-        </div>
-        <div class="category-name">{{ category.name }}</div>
+<section class="categories-section">
+  <div class="container">
+    <div class="section-panel">
+      <div class="section-header">
+        <h2 class="section-title">Our Best Categories</h2>
+        <button type="button" class="section-action" (click)="onSeeAllClick()">See All</button>
+      </div>
+
+      <div class="categories-track">
+        @for (category of categories(); track category.id) {
+          <button type="button" class="category-card" (click)="onCategoryClick(category.id)">
+            <div class="category-image-wrap">
+              <img [src]="category.imageUrl" [alt]="category.name" class="category-image">
+            </div>
+            <span class="category-name">{{ category.name }}</span>
+          </button>
+        }
       </div>
     </div>
   </div>
-</div>
+</section>

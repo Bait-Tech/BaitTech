@@ -1,67 +1,120 @@
-<nav class="navbar navbar-dark bg-black">
-  <div class="container">
-    <div class="row w-100">
-      <div class="col-2">
-        <div class="logo">
-          <a class="navbar-brand" href="#">BAITTECH</a>
-        </div>
-      </div>
-      <div class="col-8">
-        <div class="search-bar w-100">
-          <div class="d-flex search-form-container">
-            <form class="d-flex flex-grow-1">
-              <input class="form-control" type="search" placeholder="Search products" aria-label="Search">
-            </form>
+<header class="site-header">
+  @if (companyService.hasSocialLinks()) {
+    <div class="header-top">
+      <div class="container">
+        <div class="header-top-inner">
+          <div class="header-social">
+            @if (companyService.facebookUrl()) {
+              <a
+                [href]="companyService.facebookUrl()"
+                class="social-link"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook">
+                <i class="bi bi-facebook"></i>
+              </a>
+            }
+            @if (companyService.instagramUrl()) {
+              <a
+                [href]="companyService.instagramUrl()"
+                class="social-link"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram">
+                <i class="bi bi-instagram"></i>
+              </a>
+            }
+            @if (companyService.snapchatUrl()) {
+              <a
+                [href]="companyService.snapchatUrl()"
+                class="social-link"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Snapchat">
+                <i class="bi bi-snapchat"></i>
+              </a>
+            }
+            @if (companyService.phoneHref()) {
+              <a
+                [href]="companyService.phoneHref()"
+                class="social-link"
+                aria-label="Phone">
+                <i class="bi bi-telephone"></i>
+              </a>
+            }
           </div>
         </div>
       </div>
-      <div class="col-2">
-        <div class="cart-container">
-          <a (click)="goToCart()" class="cart-icon-wrapper position-relative">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" class="bi bi-cart"
-              viewBox="0 0 16 16">
-              <path
-                d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5zM3.102 4l1.313 7h8.17l1.313-7H3.102zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z" />
-            </svg>
-            <span *ngIf="cartItemCount > 0" 
-                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-              {{ cartItemCount }}
-              <span class="visually-hidden">items in cart</span>
+    </div>
+  }
+
+  <div class="header-main">
+    <div class="container">
+      <div class="header-main-inner">
+        <a class="brand" [routerLink]="['/home']">
+          <img [src]="companyService.logoUrl()" [alt]="companyService.companyName()" class="brand-logo" />
+          <span class="brand-name">{{ companyService.companyName() }}</span>
+        </a>
+
+        <div class="search-wrapper">
+          <form class="search-form" (submit)="onSearchSubmit($event)">
+            <input
+              class="search-input"
+              type="search"
+              placeholder="Search products..."
+              aria-label="Search"
+              [value]="searchTerm()"
+              (input)="onSearchInput($event)" />
+            <button class="search-btn" type="submit" aria-label="Search">
+              <i class="bi bi-search"></i>
+            </button>
+          </form>
+        </div>
+
+        <div class="header-actions">
+          <button type="button" class="header-action" (click)="openCart()">
+            <span class="action-icon-wrap">
+              <i class="bi bi-cart3"></i>
+              @if (cartItemCount() > 0) {
+                <span class="action-badge">{{ cartItemCount() }}</span>
+              }
             </span>
-          </a>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</nav>
-
-<nav class="navbar navbar-expand-lg navbar-dark bg-black p-0">
-  <div class="container">
-    <div class="row w-100">
-      <div class="col-12 d-flex justify-content-center">
-        <div class="items-nav">
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
+            <span class="action-label">Cart</span>
           </button>
-          <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
-              <li class="nav-item">
-                <a class="nav-link" [routerLink]="['/home']" routerLinkActive="active">Home</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" [routerLink]="['/categories']" routerLinkActive="active">Categories</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" [routerLink]="['/products']" routerLinkActive="active">Products</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" [routerLink]="['/sub-categories']" routerLinkActive="active">Sub Categories</a>
-              </li>
-            </ul>
-          </div>
         </div>
+
+        <button
+          class="mobile-toggle"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#headerNav"
+          aria-controls="headerNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation">
+          <i class="bi bi-list"></i>
+        </button>
       </div>
     </div>
   </div>
-</nav>
+
+  <nav class="header-nav">
+    <div class="container">
+      <div class="collapse navbar-collapse" id="headerNav">
+        <ul class="nav-links">
+          <li class="nav-links-item">
+            <a class="nav-links-link" [routerLink]="['/home']" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
+          </li>
+          <li class="nav-links-item">
+            <a class="nav-links-link" [routerLink]="['/categories']" routerLinkActive="active">Categories</a>
+          </li>
+          <li class="nav-links-item">
+            <a class="nav-links-link" [routerLink]="['/products']" routerLinkActive="active">Products</a>
+          </li>
+          <li class="nav-links-item">
+            <a class="nav-links-link" [routerLink]="['/sub-categories']" routerLinkActive="active">Sub Categories</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+</header>

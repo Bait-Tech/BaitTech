@@ -1,0 +1,42 @@
+@if (visible) {
+  <div class="side-panel-backdrop" (click)="onBackdropClick()"></div>
+}
+
+<aside
+  class="side-panel"
+  [class.side-panel-open]="visible"
+  [style.--panel-width]="width"
+  role="dialog"
+  [attr.aria-hidden]="!visible"
+  [attr.aria-label]="title">
+  <div class="side-panel-header">
+    <div class="side-panel-heading">
+      @if (icon) {
+        <span class="side-panel-icon">
+          <i [ngClass]="icon"></i>
+        </span>
+      }
+      <div class="side-panel-heading-text">
+        <h2 class="side-panel-title">{{ title }}</h2>
+        @if (subtitle) {
+          <p class="side-panel-subtitle">{{ subtitle }}</p>
+        }
+      </div>
+    </div>
+    <button
+      type="button"
+      class="side-panel-close"
+      (click)="onCloseClick()"
+      aria-label="Close panel">
+      <i class="pi pi-times"></i>
+    </button>
+  </div>
+
+  <div class="side-panel-body">
+    <ng-content></ng-content>
+  </div>
+
+  <div class="side-panel-footer">
+    <ng-content select="[panelFooter]"></ng-content>
+  </div>
+</aside>

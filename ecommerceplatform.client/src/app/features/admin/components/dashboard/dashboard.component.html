@@ -1,3 +1,150 @@
-<p>
-  dashboard works!
-</p>
+<p-toast></p-toast>
+
+<div class="grid">
+  <div class="col-12">
+    <app-admin-page-header
+      title="Dashboard"
+      icon="pi pi-home"
+      subtitle="Overview of your store performance">
+    </app-admin-page-header>
+  </div>
+
+  @if (loading()) {
+    <div class="col-12">
+      <div class="dashboard-loading card">
+        <i class="pi pi-spin pi-spinner"></i>
+        <span>Loading dashboard...</span>
+      </div>
+    </div>
+  } @else {
+    <div class="col-12">
+      <div class="grid">
+        @for (card of statCards(); track card.label) {
+          <div class="col-12 sm:col-6 lg:col-3">
+            <a [routerLink]="card.route" class="stat-card" [ngClass]="card.accent">
+              <div class="stat-card-icon">
+                <i [ngClass]="card.icon"></i>
+              </div>
+              <div class="stat-card-body">
+                <span class="stat-card-value">{{ card.value }}</span>
+                <span class="stat-card-label">{{ card.label }}</span>
+              </div>
+            </a>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="col-12 lg:col-8">
+      <div class="card dashboard-panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Recent Orders</h2>
+            <p class="panel-subtitle">{{ totalOrders() }} total orders</p>
+          </div>
+          <a routerLink="/admin/pending-orders" class="panel-link">
+            View all <i class="pi pi-arrow-right"></i>
+          </a>
+        </div>
+
+        @if (recentOrders().length) {
+          <p-table [value]="recentOrders()" [rowHover]="true">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Order</th>
+                <th>Customer</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-order>
+              <tr>
+                <td>#{{ order.orderID }}</td>
+                <td>
+                  <div class="customer-cell">
+                    <span class="customer-name">{{ order.userName }}</span>
+                    <span class="customer-phone">{{ order.phoneNumber }}</span>
+                  </div>
+                </td>
+                <td>{{ order.itemsCount }}</td>
+                <td>{{ order.total | jodCurrency }}</td>
+                <td>
+                  @if (order.isConfirmed) {
+                    <span class="status-badge status-confirmed">Confirmed</span>
+                  } @else {
+                    <span class="status-badge status-pending">Pending</span>
+                  }
+                </td>
+                <td>{{ order.createDate | date:'mediumDate' }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        } @else {
+          <div class="empty-state">
+            <i class="pi pi-inbox"></i>
+            <p>No orders yet</p>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="col-12 lg:col-4">
+      <div class="card dashboard-panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Top Products</h2>
+            <p class="panel-subtitle">Best sellers by quantity</p>
+          </div>
+        </div>
+
+        @if (topProducts().length) {
+          <ul class="top-products-list">
+            @for (product of topProducts(); track product.productID; let i = $index) {
+              <li class="top-product-item">
+                <span class="rank">{{ i + 1 }}</span>
+                <div class="top-product-info">
+                  <span class="top-product-name">{{ product.productName }}</span>
+                  <span class="top-product-meta">{{ product.totalSold }} sold · {{ product.revenue | jodCurrency }}</span>
+                </div>
+              </li>
+            }
+          </ul>
+        } @else {
+          <div class="empty-state">
+            <i class="pi pi-chart-bar"></i>
+            <p>No sales data yet</p>
+          </div>
+        }
+      </div>
+
+      <div class="card dashboard-panel quick-actions">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Quick Actions</h2>
+            <p class="panel-subtitle">{{ catalogSummary() }}</p>
+          </div>
+        </div>
+        <div class="quick-actions-grid">
+          <a routerLink="/admin/pending-orders" class="quick-action">
+            <i class="pi pi-clock"></i>
+            <span>Pending Orders</span>
+          </a>
+          <a routerLink="/admin/products" class="quick-action">
+            <i class="pi pi-box"></i>
+            <span>Manage Products</span>
+          </a>
+          <a routerLink="/admin/categories" class="quick-action">
+            <i class="pi pi-tags"></i>
+            <span>Categories</span>
+          </a>
+          <a routerLink="/admin/company-settings" class="quick-action">
+            <i class="pi pi-cog"></i>
+            <span>Settings</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,7 +1,6 @@
-import { Component, OnInit } from '@angular/core';
-import { CategoryService } from '../../../../../admin/services/category.service';
-import { ICategories } from '../../../../../admin/interfaces/categories.interface';
+import { Component, input } from '@angular/core';
 import { Router } from '@angular/router';
+import { ICategories } from '../../../../../admin/interfaces/categories.interface';
 
 @Component({
   selector: 'app-categories-section',
@@ -9,27 +8,16 @@ import { Router } from '@angular/router';
   styleUrls: ['./categories-section.component.css'],
   standalone: false,
 })
-export class CategoriesSectionComponent implements OnInit {
-  categories: ICategories[] | undefined;
+export class CategoriesSectionComponent {
+  categories = input<ICategories[]>([]);
 
-  constructor(
-    private categoryService: CategoryService,
-    private router: Router
-  ) {}
+  constructor(private router: Router) {}
 
-  ngOnInit() {
-    this.getCategories();
-  }
-
-  getCategories() {
-    this.categoryService
-      .getCategories()
-      .subscribe((categories: ICategories[]) => {
-        this.categories = categories;
-      });
+  onCategoryClick(categoryId: number) {
+    this.router.navigate(['/sub-categories', categoryId]);
   }
 
   onSeeAllClick() {
-    this.router.navigate(['/categories']); 
+    this.router.navigate(['/categories']);
   }
 }

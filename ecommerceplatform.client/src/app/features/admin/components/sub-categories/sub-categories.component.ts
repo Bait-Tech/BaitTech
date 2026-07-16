@@ -1,12 +1,12 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ChangeDetectorRef, OnInit, signal } from '@angular/core';
 import { ISubCategories } from '../../interfaces/sub-categories.interface';
 import { ICategories } from '../../interfaces/categories.interface';
-import { FileUpload } from 'primeng/fileupload';
+import { ICategoryOption } from '../../interfaces/category-option.interface';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { IPaginationParams } from '../../../../shared/interfaces/pagination-params.interface';
 import { SubCategoryService } from '../../services/sub-category.service';
 import { CategoryService } from '../../services/category.service';
-import { MessageService } from 'primeng/api';
+import { MessageService, OverlayOptions } from 'primeng/api';
 
 @Component({
   selector: 'app-sub-categories',
@@ -15,24 +15,36 @@ import { MessageService } from 'primeng/api';
   standalone: false,
 })
 export class SubCategoriesComponent implements OnInit {
-  subCategories: ISubCategories[] = [];
+  subCategories = signal<ISubCategories[]>([]);
+  categories = signal<ICategories[]>([]);
+  categoryOptions = signal<ICategoryOption[]>([]);
   selectedSubCategories: ISubCategories[] = [];
-  categories: ICategories[] = [];
-  subCategoryDialog: boolean = false;
-  submitted: boolean = false;
-  loading: boolean = true;
-  totalRecords: number = 0;
+  subCategoryPanelVisible = signal(false);
+  deletePanelVisible = signal(false);
+  panelTitle = signal('');
+  panelSubtitle = signal('');
+  panelIcon = signal('pi pi-plus');
+  saveButtonLabel = signal('Create Sub Category');
+  saving = signal(false);
+  imagePreview = signal('');
+  submitted = false;
+  initialLoading = signal(true);
+  tableLoading = signal(false);
+  totalRecords = signal(0);
   subCategoryForm: FormGroup;
-
-  @ViewChild('fileUpload') fileUpload!: FileUpload;
-
-  deleteCategoriesDialog: boolean = false;
+  appendTarget: 'body' = 'body';
+  categoryOverlayOptions: OverlayOptions = {
+    appendTo: 'body',
+    autoZIndex: true,
+    baseZIndex: 1200,
+  };
 
   constructor(
     private fb: FormBuilder,
     private subCategoryService: SubCategoryService,
     private categoryService: CategoryService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private cdr: ChangeDetectorRef
   ) {
     this.subCategoryForm = this.fb.group({
       id: [null],
@@ -44,16 +56,18 @@ export class SubCategoriesComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadSubCategories();
     this.loadCategories();
+    this.loadSubCategories();
   }
 
   loadCategories(): void {
     this.categoryService.getCategories().subscribe({
       next: (categories) => {
-        this.categories = categories;
+        const items = categories ?? [];
+        this.categories.set(items);
+        this.applyCategoryOptions(items);
       },
-      error: (error) => {
+      error: () => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -66,36 +80,46 @@ export class SubCategoriesComponent implements OnInit {
 
   openNew(): void {
     this.subCategoryForm.reset();
+    this.imagePreview.set('');
     this.submitted = false;
-    this.subCategoryDialog = true;
+    this.panelTitle.set('New Sub Category');
+    this.panelSubtitle.set('Add a new sub category');
+    this.panelIcon.set('pi pi-plus');
+    this.saveButtonLabel.set('Create Sub Category');
+    this.loadCategories();
+    this.subCategoryPanelVisible.set(true);
   }
 
   deleteSelectedCategories(): void {
-    this.deleteCategoriesDialog = true;
+    this.deletePanelVisible.set(true);
   }
 
   loadSubCategories(event?: any): void {
-    this.loading = true;
-
+    if (!this.initialLoading()) {
+      this.tableLoading.set(true);
+    }
+    const first = event?.first ?? 0;
+    const rows = event?.rows ?? 10;
     const params: IPaginationParams = {
-      pageNumber: event?.first ?? 1,
-      pageSize: event?.rows ?? 10,
+      pageNumber: Math.floor(first / rows) + 1,
+      pageSize: rows,
     };
-
     this.subCategoryService.getAllPaged(params).subscribe({
       next: (response) => {
-        this.subCategories = response.items;
-        this.totalRecords = response.totalCount;
-        this.loading = false;
+        this.subCategories.set(response.items ?? []);
+        this.totalRecords.set(response.totalCount ?? 0);
+        this.initialLoading.set(false);
+        this.tableLoading.set(false);
       },
-      error: (error) => {
+      error: () => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
           detail: 'Failed to load sub categories',
           life: 3000,
         });
-        this.loading = false;
+        this.initialLoading.set(false);
+        this.tableLoading.set(false);
       },
     });
   }
@@ -104,154 +128,179 @@ export class SubCategoriesComponent implements OnInit {
     this.subCategoryForm.patchValue({
       id: category.id,
       englishName: category.englishName,
-      arabicName: category.arabicName,
       categoryID: category.categoryID,
       imageUrl: category.imageUrl,
     });
-    this.subCategoryDialog = true;
-  }
-
-  hideDialog(): void {
-    this.subCategoryDialog = false;
+    this.imagePreview.set(category.imageUrl ?? '');
     this.submitted = false;
-    this.subCategoryForm.reset();
+    this.panelTitle.set('Edit Sub Category');
+    this.panelSubtitle.set('Update sub category details');
+    this.panelIcon.set('pi pi-pencil');
+    this.saveButtonLabel.set('Save Changes');
+    this.loadCategories();
+    this.subCategoryPanelVisible.set(true);
   }
 
-  onFileSelect(event: any): void {
-    if (event.files && event.files.length > 0) {
-      const file = event.files[0];
+  onPanelVisibleChange(visible: boolean): void {
+    this.subCategoryPanelVisible.set(visible);
+    if (!visible) {
+      this.resetPanel();
+    }
+  }
 
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-      if (!allowedTypes.includes(file.type)) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Please upload a valid image file (JPG, PNG)',
-          life: 3000,
-        });
-        this.fileUpload.clear();
-        return;
-      }
+  onDeletePanelVisibleChange(visible: boolean): void {
+    this.deletePanelVisible.set(visible);
+  }
 
-      this.subCategoryForm.patchValue({
-        imageFile: file,
+  onCategorySelectShow(): void {
+    this.cdr.markForCheck();
+  }
+
+  hidePanel(): void {
+    this.subCategoryPanelVisible.set(false);
+    this.resetPanel();
+  }
+
+  onImageInputChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || !input.files.length) {
+      return;
+    }
+    const file = input.files[0];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Please upload a valid image file (JPG, PNG)',
+        life: 3000,
       });
-
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.subCategoryForm.patchValue({
-          imageUrl: reader.result as string,
-        });
-      };
-      reader.readAsDataURL(file);
+      input.value = '';
+      return;
     }
-  }
-
-  onRemoveImage(): void {
-    this.subCategoryForm.patchValue({
-      imageFile: null,
-      imageUrl: '',
-    });
-    if (this.fileUpload) {
-      this.fileUpload.clear();
-    }
+    this.subCategoryForm.patchValue({ imageFile: file });
+    this.readImagePreview(file);
+    input.value = '';
   }
 
   saveCategory(): void {
     this.submitted = true;
-
     if (this.subCategoryForm.invalid) {
       return;
     }
-
+    this.saving.set(true);
     const formValue = this.subCategoryForm.value;
     const isEditing = formValue.id != null;
     const imageFile = this.subCategoryForm.get('imageFile')?.value;
-
     if (isEditing) {
-      this.subCategoryService
-        .updateWithImage(formValue.id, formValue, imageFile)
-        .subscribe({
-          next: () => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Successful',
-              detail: 'Category updated',
-              life: 3000,
-            });
-            this.loadSubCategories();
-            this.hideDialog();
-          },
-          error: (error) => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'Failed to update category',
-              life: 3000,
-            });
-          },
-        });
+      this.subCategoryService.updateWithImage(formValue.id, formValue, imageFile).subscribe({
+        next: () => this.onSaveSuccess('Sub category updated'),
+        error: () => this.onSaveError('Failed to update sub category'),
+      });
       return;
     }
-
     const subCategoryData = {
       englishName: formValue.englishName,
-      arabicName: formValue.arabicName,
+      arabicName: formValue.englishName,
       categoryID: formValue.categoryID,
     };
-
-    this.subCategoryService
-      .createWithImage(subCategoryData, imageFile)
-      .subscribe({
-        next: () => {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Successful',
-            detail: 'Category created',
-            life: 3000,
-          });
-          this.loadSubCategories();
-          this.hideDialog();
-        },
-        error: (error) => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Failed to create category',
-            life: 3000,
-          });
-        },
-      });
+    this.subCategoryService.createWithImage(subCategoryData, imageFile).subscribe({
+      next: () => this.onSaveSuccess('Sub category created'),
+      error: () => this.onSaveError('Failed to create sub category'),
+    });
   }
 
   confirmDeleteSelected(): void {
-    this.deleteCategoriesDialog = false;
-
+    this.deletePanelVisible.set(false);
     const selectedIds = this.selectedSubCategories.map((c) => c.id);
-
     this.subCategoryService.deleteList(selectedIds).subscribe({
       next: () => {
         this.messageService.add({
           severity: 'success',
           summary: 'Successful',
-          detail: 'Categories deleted',
+          detail: 'Sub categories deleted',
           life: 3000,
         });
         this.selectedSubCategories = [];
         this.loadSubCategories();
       },
-      error: (error) => {
+      error: () => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'Failed to delete categories',
+          detail: 'Failed to delete sub categories',
           life: 3000,
         });
       },
     });
   }
 
-  get f() {
-    return this.subCategoryForm.controls;
+  isFieldInvalid(fieldName: string): boolean {
+    const field = this.subCategoryForm.get(fieldName);
+    return field ? field.invalid && (field.dirty || field.touched || this.submitted) : false;
+  }
+
+  getFieldError(fieldName: string): string {
+    const control = this.subCategoryForm.get(fieldName);
+    const label = this.getFieldLabel(fieldName);
+    if (control?.errors) {
+      if (control.errors['required']) return `${label} is required`;
+      if (control.errors['min']) return `${label} must be greater than or equal to ${control.errors['min'].min}`;
+    }
+    return '';
+  }
+
+  private onSaveSuccess(detail: string): void {
+    this.saving.set(false);
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Successful',
+      detail,
+      life: 3000,
+    });
+    this.loadSubCategories();
+    this.hidePanel();
+  }
+
+  private onSaveError(detail: string): void {
+    this.saving.set(false);
+    this.messageService.add({
+      severity: 'error',
+      summary: 'Error',
+      detail,
+      life: 3000,
+    });
+  }
+
+  private readImagePreview(file: File): void {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const preview = reader.result as string;
+      this.imagePreview.set(preview);
+      this.subCategoryForm.patchValue({ imageUrl: preview });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  private applyCategoryOptions(items: ICategories[]): void {
+    const options: ICategoryOption[] = [];
+    for (const item of items) {
+      options.push({ label: item.name, value: item.id });
+    }
+    this.categoryOptions.set(options);
+  }
+
+  private getFieldLabel(fieldName: string): string {
+    const labels: Record<string, string> = {
+      englishName: 'English Name',
+      categoryID: 'Category',
+    };
+    return labels[fieldName] ?? fieldName;
+  }
+
+  private resetPanel(): void {
+    this.submitted = false;
+    this.subCategoryForm.reset();
+    this.imagePreview.set('');
   }
 }

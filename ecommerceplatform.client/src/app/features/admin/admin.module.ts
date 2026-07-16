@@ -11,23 +11,20 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { DialogModule } from 'primeng/dialog';
 import { DividerModule } from 'primeng/divider';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { FileUploadModule } from 'primeng/fileupload';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputTextareaModule } from 'primeng/inputtextarea';
+import { TextareaModule } from 'primeng/textarea';
 import { MenuModule } from 'primeng/menu';
 import { MessageModule } from 'primeng/message';
-import { MessagesModule } from 'primeng/messages';
 import { PanelMenuModule } from 'primeng/panelmenu';
 import { PasswordModule } from 'primeng/password';
 import { RippleModule } from 'primeng/ripple';
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
-import { ToolbarModule } from 'primeng/toolbar';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService, SharedModule } from 'primeng/api';
 import { LoginComponent } from './components/login/login.component';
 import { ProductsComponent } from './components/products/products.component';
 import { SubCategoriesComponent } from './components/sub-categories/sub-categories.component';
@@ -37,11 +34,14 @@ import { TooltipModule } from 'primeng/tooltip';
 import { HeroSectionComponent } from './components/home-page-customize/components/hero-section/hero-section.component';
 import { ProductsSectionComponent } from './components/home-page-customize/components/products-section/products-section.component';
 import { ProductsSectionPopupComponent } from './components/home-page-customize/components/products-section/components/products-section-popup/products-section-popup.component';
-import { DialogService, DynamicDialogModule } from 'primeng/dynamicdialog';
 import { ColorChromeModule } from 'ngx-color/chrome';
 import { PendingOrdersComponent } from './components/pending-orders/pending-orders.component';
 import { ConfirmedOrdersComponent } from './components/confirmed-orders/confirmed-orders.component';
-
+import { CompanySettingsComponent } from './components/company-settings/company-settings.component';
+import { AdminPageHeaderComponent } from './components/shared/admin-page-header/admin-page-header.component';
+import { SidePanelComponent } from './components/shared/side-panel/side-panel.component';
+import { AdminConfirmPanelComponent } from './components/shared/admin-confirm-panel/admin-confirm-panel.component';
+import { SharedModule as AppSharedModule } from '../../shared/shared.module';
 const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
@@ -57,6 +57,7 @@ const routes: Routes = [
       { path: 'home-page-customize', component: HomePageCustomizeComponent },
       { path: 'pending-orders', component: PendingOrdersComponent },
       { path: 'confirmed-orders', component: ConfirmedOrdersComponent },
+      { path: 'company-settings', component: CompanySettingsComponent },
     ],
   },
 ];
@@ -69,33 +70,31 @@ const routes: Routes = [
     RouterModule.forChild(routes),
     InputTextModule,
     InputNumberModule,
-    InputTextareaModule,
+    TextareaModule,
     PasswordModule,
     CheckboxModule,
     RippleModule,
     ButtonModule,
     CardModule,
     TableModule,
-    ToolbarModule,
+    SharedModule,
     MenuModule,
     ToastModule,
     ConfirmDialogModule,
-    DialogModule,
-    DropdownModule,
+    SelectModule,
     PanelMenuModule,
     DividerModule,
     MessageModule,
-    MessagesModule,
     AvatarModule,
     BadgeModule,
     FileUploadModule,
     TooltipModule,
-    ToolbarModule,
-    DynamicDialogModule,
     ColorChromeModule,
-    
+    AdminLayoutComponent,
+    AppSharedModule,
   ],
   declarations: [
+    DashboardComponent,
     CategoriesComponent,
     LoginComponent,
     ProductsComponent,
@@ -105,8 +104,12 @@ const routes: Routes = [
     ProductsSectionComponent, 
     ProductsSectionPopupComponent,
     PendingOrdersComponent,
-    ConfirmedOrdersComponent
+    ConfirmedOrdersComponent,
+    AdminPageHeaderComponent,
+    SidePanelComponent,
+    AdminConfirmPanelComponent,
+    CompanySettingsComponent
   ],
-  providers: [MessageService, ConfirmationService,DialogService],
+  providers: [MessageService, ConfirmationService],
 })
 export class AdminModule {}

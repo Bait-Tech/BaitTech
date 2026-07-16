@@ -1,0 +1,17 @@
+<div class="admin-page-header">
+  <div class="page-heading">
+    <span class="page-icon">
+      <i [ngClass]="icon"></i>
+    </span>
+    <div class="page-heading-text">
+      <h1 class="page-title">{{ title }}</h1>
+      @if (subtitle) {
+        <p class="page-subtitle">{{ subtitle }}</p>
+      }
+    </div>
+  </div>
+
+  <div class="page-actions">
+    <ng-content></ng-content>
+  </div>
+</div>

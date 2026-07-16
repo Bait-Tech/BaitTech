@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit, Renderer2, DOCUMENT } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+
 import { AuthService } from '../../../../shared/services/auth.service';
+import { CompanyService } from '../../../../shared/services/company.service';
 import { ILogin } from '../../interfaces/login.interface';
 import { LayoutService } from '../../../../layouts/services/app.layout.service';
 
@@ -20,7 +22,7 @@ import { LayoutService } from '../../../../layouts/services/app.layout.service';
     `,
   ],
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, OnDestroy {
   loginForm: FormGroup;
   loading = false;
   error = '';
@@ -29,7 +31,10 @@ export class LoginComponent implements OnInit {
     private formBuilder: FormBuilder,
     private router: Router,
     private authService: AuthService,
-    public layoutService: LayoutService
+    public layoutService: LayoutService,
+    public companyService: CompanyService,
+    private renderer: Renderer2,
+    @Inject(DOCUMENT) private document: Document
   ) {
     this.loginForm = this.formBuilder.group({
       email: ['', [Validators.required, Validators.email]],
@@ -37,7 +42,21 @@ export class LoginComponent implements OnInit {
     });
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.enableAdminTheme();
+  }
+
+  ngOnDestroy() {
+    this.disableAdminTheme();
+  }
+
+  private enableAdminTheme() {
+    this.renderer.addClass(this.document.body, 'admin-theme');
+  }
+
+  private disableAdminTheme() {
+    this.renderer.removeClass(this.document.body, 'admin-theme');
+  }
 
   onSubmit() {
     if (this.loginForm.invalid) {

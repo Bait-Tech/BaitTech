@@ -1,14 +1,18 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { HeroSectionService } from '../../../../services/hero-section.service';
 import { IHeroSection } from '../../../../interfaces/hero-section.interface';
+import { IHeroSectionImage } from '../../../../interfaces/hero-section-image.interface';
 
 @Component({
-  selector: 'app-hero-section',
-  templateUrl: './hero-section.component.html',
-  styleUrls: ['./hero-section.component.css'],
+    selector: 'app-hero-section',
+    templateUrl: './hero-section.component.html',
+    styleUrls: ['./hero-section.component.css'],
+    standalone: false
 })
 export class HeroSectionComponent implements OnInit {
-  heroSection!: IHeroSection;
+  heroSectionId = signal(0);
+  heroImages = signal<IHeroSectionImage[]>([]);
+  displayOrder = signal(0);
 
   constructor(private heroSectionService: HeroSectionService) {}
 
@@ -18,67 +22,118 @@ export class HeroSectionComponent implements OnInit {
 
   loadData() {
     this.heroSectionService.getHeroSection().subscribe((data) => {
-      this.heroSection = data;
+      this.applyHeroSection(data);
     });
   }
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
 
-    if (input.files && input.files.length) {
-      const file = input.files[0];
-
-      const reader = new FileReader();
-
-      reader.onload = () => {
-        this.heroSection.heroSectionImageDTOs.push({
-          id: 0,
-          isMain: this.heroSection.heroSectionImageDTOs.length == 0,
-          linkUrl: reader.result as string,
-          imageUrl: reader.result as string,
-          imageFile: file,
-        });
-      };
-      reader.readAsDataURL(file);
+    if (!input.files || !input.files.length) {
+      return;
     }
+
+    const file = input.files[0];
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      this.addHeroImage(reader.result as string, file);
+      input.value = '';
+    };
+
+    reader.readAsDataURL(file);
   }
 
-  onImageChange(event: Event, itemID: number): void {
+  onImageChange(event: Event, index: number): void {
     const input = event.target as HTMLInputElement;
-    const imageItem = this.heroSection.heroSectionImageDTOs.find(
-      (hs) => hs.id == itemID
-    );
+    const images = this.heroImages();
+    const imageItem = images[index];
 
-    if (input.files && input.files.length) {
-      const file = input.files[0];
-      const reader = new FileReader();
-
-      reader.onload = () => {
-        imageItem!.imageUrl = reader.result as string;
-        imageItem!.imageFile = file;
-      };
-
-      reader.readAsDataURL(file);
+    if (!imageItem || !input.files || !input.files.length) {
+      return;
     }
+
+    const file = input.files[0];
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      this.updateHeroImage(index, reader.result as string, file);
+      input.value = '';
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  setMainImage(index: number): void {
+    const images = this.heroImages().map((image, i) => ({
+      ...image,
+      isMain: i === index,
+    }));
+    this.heroImages.set(images);
+  }
+
+  removeImage(index: number): void {
+    const images = [...this.heroImages()];
+    const wasMain = images[index].isMain;
+    images.splice(index, 1);
+
+    if (wasMain && images.length > 0) {
+      images[0] = { ...images[0], isMain: true };
+    }
+
+    this.heroImages.set(images);
   }
 
   saveChanges() {
-    this.heroSection.id ? this.updateHeroSection() : this.insertHeroSection();
+    const payload = this.buildPayload();
+    payload.id ? this.updateHeroSection(payload) : this.insertHeroSection(payload);
   }
 
-  insertHeroSection() {
-    this.heroSectionService
-      .insertHeroSection(this.heroSection)
-      .subscribe(() => {
-        this.loadData();
-      });
+  private applyHeroSection(data: IHeroSection): void {
+    this.heroSectionId.set(data.id ?? 0);
+    this.displayOrder.set(data.displayOrder ?? 0);
+    this.heroImages.set([...(data.heroSectionImageDTOs ?? [])]);
   }
 
-  updateHeroSection() {
-    this.heroSectionService
-      .updateHeroSection(this.heroSection)
-      .subscribe(() => {
-        this.loadData();
-      });
+  private addHeroImage(imageUrl: string, file: File): void {
+    const images = [...this.heroImages()];
+    images.push({
+      id: 0,
+      isMain: images.length === 0,
+      linkUrl: '',
+      imageUrl,
+      imageFile: file,
+    });
+    this.heroImages.set(images);
+  }
+
+  private updateHeroImage(index: number, imageUrl: string, file: File): void {
+    const images = [...this.heroImages()];
+    images[index] = {
+      ...images[index],
+      imageUrl,
+      imageFile: file,
+    };
+    this.heroImages.set(images);
+  }
+
+  private buildPayload(): IHeroSection {
+    return {
+      id: this.heroSectionId(),
+      displayOrder: this.displayOrder(),
+      heroSectionImageDTOs: this.heroImages(),
+    };
+  }
+
+  private insertHeroSection(payload: IHeroSection) {
+    this.heroSectionService.insertHeroSection(payload).subscribe(() => {
+      this.loadData();
+    });
+  }
+
+  private updateHeroSection(payload: IHeroSection) {
+    this.heroSectionService.updateHeroSection(payload).subscribe(() => {
+      this.loadData();
+    });
   }
 }

@@ -1,39 +1,71 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CartService } from '../../../../features/client/state-services/cart.service';
+import { CompanyService } from '../../../../shared/services/company.service';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-nav-bar',
   templateUrl: './nav-bar.component.html',
   styleUrls: ['./nav-bar.component.css'],
-  standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RouterModule]
 })
 export class NavBarComponent implements OnInit, OnDestroy {
-  cartItemCount: number = 0;
+  cartItemCount = signal(0);
+  searchTerm = signal('');
   destroy$ = new Subject<void>();
-  constructor(private cartService: CartService, private router: Router) {}
+
+  constructor(
+    private cartService: CartService,
+    private router: Router,
+    public companyService: CompanyService
+  ) {}
 
   ngOnInit() {
     this.cartService.cartState$
       .pipe(takeUntil(this.destroy$))
       .subscribe((cartItems) => {
-        console.log(cartItems);
-        this.cartItemCount = cartItems.reduce(
-          (total, item) => total + item.qty,
-          0
-        );
+        this.cartItemCount.set(this.calculateCartCount(cartItems));
       });
   }
 
-  goToCart() {
-    this.router.navigate(['/shopping-cart']);
+  onSearchInput(event: Event) {
+    const target = event.target as HTMLInputElement;
+    this.searchTerm.set(target.value);
+  }
+
+  onSearchSubmit(event: Event) {
+    event.preventDefault();
+    this.navigateToProductsSearch();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private calculateCartCount(cartItems: { qty: number }[]): number {
+    let total = 0;
+
+    for (const item of cartItems) {
+      total += item.qty;
+    }
+
+    return total;
+  }
+
+  openCart() {
+    this.cartService.openPanel();
+  }
+
+  private navigateToProductsSearch() {
+    const query = this.searchTerm().trim();
+
+    if (!query) {
+      this.router.navigate(['/products']);
+      return;
+    }
+
+    this.router.navigate(['/products'], { queryParams: { q: query } });
   }
 }

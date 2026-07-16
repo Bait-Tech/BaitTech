@@ -12,56 +12,96 @@
     </div>
   </div>
 
-  <div *ngIf="productSections && productSections.length > 0">
-    <div *ngFor="let section of productSections" class="row m-0 bg-white rounded shadow-sm overflow-hidden mb-3">
-      <div class="col-12 border-bottom">
-        <div class="row align-items-center p-3 m-0">
-          <div class="col-8">
-            <div class="d-flex align-items-center">
-              <h5 class="me-2">{{ section.title }}</h5>
-              <span class="badge" [ngStyle]="{'background-color': section.badgeColor}">{{ section.badgeText }}</span>
+  @if (loading()) {
+    <div class="table-loading">
+      <i class="pi pi-spin pi-spinner"></i>
+    </div>
+  } @else if (productSections().length > 0) {
+    @for (section of productSections(); track section.id) {
+      <div class="row m-0 bg-white rounded shadow-sm overflow-hidden mb-3">
+        <div class="col-12 border-bottom">
+          <div class="row align-items-center p-3 m-0">
+            <div class="col-8">
+              <div class="d-flex align-items-center">
+                <h5 class="me-2">{{ section.title }}</h5>
+                <span class="badge" [ngStyle]="{'background-color': section.badgeColor}">{{ section.badgeText }}</span>
+              </div>
+            </div>
+            <div class="col-4 text-end">
+              <p-button class="w-100" icon="pi pi-pencil" (onClick)="editSection(section)" styleClass="p-button-primary"></p-button>
+              <p-button class="w-100" icon="pi pi-trash" (onClick)="deleteSection(section.id)" styleClass="p-button-danger"></p-button>
             </div>
           </div>
-          <div class="col-4 text-end">
-            <p-button class="w-100" icon="pi pi-pencil" (onClick)="editSection(section)" styleClass="p-button-primary"></p-button>
+        </div>
 
-            <p-button class="w-100"  icon="pi pi-trash" (onClick)="deleteSection(section.id)" styleClass="p-button-danger"></p-button>
+        <div class="col-12 p-3">
+          <div class="products-scroll-container">
+            <div class="row flex-nowrap">
+              @for (product of section.products; track product.id) {
+                <div class="col-sm-6 col-md-4 col-lg-3 mb-3">
+                  <div class="card h-100 border-0 shadow-sm">
+                    @if (product.images.length > 0) {
+                      <div class="card-img-top product-img-container">
+                        <img [src]="product.images[0].imageUrl" class="img-fluid" alt="{{ product.name }}">
+                      </div>
+                    }
+                    <div class="card-body">
+                      <h6 class="card-title">{{ product.name }}</h6>
+                      <p class="card-text small text-truncate">{{ product.description }}</p>
+                      <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                          @if (!product.discountPrice) {
+                            <span class="price-tag">{{ product.price | jodCurrency }}</span>
+                          } @else {
+                            <span class="price-tag">{{ product.discountPrice | jodCurrency }}</span>
+                            <span class="original-price ms-1">{{ product.price | jodCurrency }}</span>
+                          }
+                        </div>
+                        <span class="badge bg-secondary">Stock: {{ product.stockQuantity }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
           </div>
         </div>
       </div>
-
-      <div class="col-12 p-3">
-        <div class="products-scroll-container">
-          <div class="row flex-nowrap">
-            <div *ngFor="let product of section.products" class="col-sm-6 col-md-4 col-lg-3 mb-3">
-              <div class="card h-100 border-0 shadow-sm">
-                <div class="card-img-top product-img-container" *ngIf="product.images.length > 0">
-                  <img [src]="product.images[0].imageUrl" class="img-fluid" alt="{{ product.name }}">
-                </div>
-                <div class="card-body">
-                  <h6 class="card-title">{{ product.name }}</h6>
-                  <p class="card-text small text-truncate">{{ product.description }}</p>
-                  <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                      <span class="price-tag" *ngIf="!product.discountPrice">{{ product.price | currency }}</span>
-                      <span *ngIf="product.discountPrice">
-                        <span class="price-tag">{{ product.discountPrice | currency }}</span>
-                        <span class="original-price ms-1">{{ product.price | currency }}</span>
-                      </span>
-                    </div>
-                    <span class="badge bg-secondary">Stock: {{ product.stockQuantity }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+    }
+  } @else {
+    <div class="row m-0 bg-white rounded shadow-sm overflow-hidden p-5 text-center">
+      <div class="col-12">
+        <i class="pi pi-exclamation-circle fs-1 text-muted mb-3"></i>
+        <h5 class="text-muted">No product sections found</h5>
+        <p class="text-muted">Click "Add New Section" to create your first section</p>
+      </div>
     </div>
-  </div>
-
-  <div *ngIf="!productSections || productSections.length === 0" class="row m-0 bg-white rounded shadow-sm overflow-hidden p-5 text-center">
-    <div class="col-12">
-      <i class="pi pi-exclamation-circle fs-1 text-muted mb-3"></i>
-      <h5 class="text-muted">No product sections found</h5>
-      <p class="text-muted">Click "Add New Section" to create your first section</p>
-    </div>
-  </div>
+  }
 </div>
+
+<app-side-panel
+  [visible]="sectionPanelVisible()"
+  [title]="panelTitle()"
+  [subtitle]="panelSubtitle()"
+  [icon]="panelIcon()"
+  width="44rem"
+  (visibleChange)="onPanelVisibleChange($event)">
+  <app-products-section-popup [sectionData]="selectedSection()"></app-products-section-popup>
+
+  <div panelFooter class="admin-panel-footer">
+    <button
+      pButton
+      pRipple
+      type="button"
+      label="Cancel"
+      icon="pi pi-times"
+      class="p-button-outlined p-button-secondary"
+      (click)="hideSectionPanel()">
+    </button>
+    <p-button
+      [label]="saveButtonLabel()"
+      icon="pi pi-check"
+      (onClick)="saveSectionPanel()">
+    </p-button>
+  </div>
+</app-side-panel>

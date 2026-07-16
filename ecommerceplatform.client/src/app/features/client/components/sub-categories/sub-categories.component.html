@@ -1,42 +1,71 @@
-<div class="container-fluid bg-white shadow-sm mb-4">
-  <div class="container py-4">
-    <h1 class="display-5 fw-bold">Sub Categories</h1>
-  </div>
-</div>
+<div class="sub-categories-page">
+  <section class="page-header">
+    <div class="container">
+      @if (showBackLink()) {
+        <button type="button" class="back-link" (click)="goBackToCategories()">
+          <i class="bi bi-arrow-left"></i>
+          Back to Categories
+        </button>
+      }
 
-<div class="container mb-4">
-  <div class="row">
-    <div class="col-12">
-      <div class="input-group">
-        <span class="input-group-text bg-white">
-          <i class="bi bi-search"></i>
-        </span>
-        <input type="text" class="form-control" placeholder="Search categories..." [(ngModel)]="searchTerm">
+      <h1 class="page-title">{{ pageTitle() }}</h1>
+      <p class="page-subtitle">{{ pageSubtitle() }}</p>
+    </div>
+  </section>
+
+  <div class="container page-body">
+    <div class="search-panel">
+      <form class="search-form" (submit)="onSearchSubmit($event)">
+        <i class="bi bi-search search-icon"></i>
+        <input
+          class="search-input"
+          type="search"
+          placeholder="Search sub categories..."
+          aria-label="Search sub categories"
+          [value]="searchTerm()"
+          (input)="onSearchInput($event)" />
+      </form>
+    </div>
+
+    @if (loading()) {
+      <div class="state-panel">
+        <div class="state-spinner"></div>
+        <p class="state-text">Loading sub categories...</p>
       </div>
-    </div>
-  </div>
-</div>
+    }
 
-<div class="container">
-  <div class="row g-4">
-    <div class="col-2 col-sm-6 col-lg-4" *ngFor="let category of filteredCategories" style="cursor: pointer;"
-      (click)="goToProducts(category.id)">
-      <div class="card h-100 shadow-sm hover-shadow">
-        <img
-          [src]="category.imageUrl || 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&q=80&w=500'"
-          [alt]="category.englishName" class="card-img-top" style="height: 200px; object-fit: cover;">
-        <div class="card-body">
-          <h3 class="card-title h5 mb-0">{{ category.englishName }}</h3>
-        </div>
+    @if (loadError()) {
+      <div class="state-panel">
+        <i class="bi bi-exclamation-circle state-icon"></i>
+        <p class="state-text">Failed to load sub categories</p>
+        <button type="button" class="state-action" (click)="retryLoad()">Try Again</button>
       </div>
-    </div>
-  </div>
-</div>
+    }
 
-<div class="container" *ngIf="filteredCategories?.length === 0">
-  <div class="row">
-    <div class="col-12 text-center py-5">
-      <h3 class="text-muted">No sub-categories found</h3>
-    </div>
+    @if (!loading() && !loadError()) {
+      <div class="sub-categories-grid">
+        @for (subCategory of filteredSubCategories(); track subCategory.id) {
+          <button type="button" class="sub-category-card" (click)="goToProducts(subCategory.id)">
+            <div class="sub-category-image-wrap">
+              <img [src]="subCategory.imageUrl" [alt]="subCategory.englishName" class="sub-category-image">
+            </div>
+            <div class="sub-category-body">
+              <h2 class="sub-category-name">{{ subCategory.englishName }}</h2>
+              <span class="sub-category-action">
+                View Products
+                <i class="bi bi-arrow-right"></i>
+              </span>
+            </div>
+          </button>
+        }
+      </div>
+    }
+
+    @if (showEmptyState()) {
+      <div class="state-panel">
+        <i class="bi bi-grid state-icon"></i>
+        <p class="state-text">No sub categories found</p>
+      </div>
+    }
   </div>
 </div>

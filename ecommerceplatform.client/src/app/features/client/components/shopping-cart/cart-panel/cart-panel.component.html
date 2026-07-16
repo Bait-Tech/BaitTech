@@ -1,0 +1,148 @@
+@if (cartService.isPanelOpen()) {
+  <div class="cart-panel-backdrop" (click)="onBackdropClick()"></div>
+}
+
+<aside
+  class="cart-panel"
+  [class.cart-panel-open]="cartService.isPanelOpen()"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Shopping cart"
+  [attr.aria-hidden]="!cartService.isPanelOpen()">
+  <div class="cart-panel-header">
+    <div class="cart-panel-heading">
+      <span class="cart-panel-icon">
+        <i class="bi bi-bag-check"></i>
+      </span>
+      <div class="cart-panel-heading-text">
+        <h2 class="cart-panel-title">Your Cart</h2>
+        @if (itemCount() > 0) {
+          <p class="cart-panel-subtitle">{{ itemCount() }} item(s)</p>
+        }
+      </div>
+    </div>
+    <button
+      type="button"
+      class="cart-panel-close"
+      (click)="onCloseClick()"
+      aria-label="Close cart">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+
+  <div class="cart-panel-body">
+    @if (orderSuccess()) {
+      <div class="cart-alert cart-alert-success">
+        <i class="bi bi-check-circle-fill"></i>
+        <span>Your order has been successfully submitted!</span>
+        <button type="button" class="cart-alert-dismiss" (click)="onDismissSuccess()" aria-label="Dismiss">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+    }
+
+    @if (orderError()) {
+      <div class="cart-alert cart-alert-error">
+        <i class="bi bi-exclamation-circle-fill"></i>
+        <span>There was an error submitting your order. Please try again.</span>
+        <button type="button" class="cart-alert-dismiss" (click)="onDismissError()" aria-label="Dismiss">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+    }
+
+    @if (cartLines().length === 0) {
+      <div class="cart-empty">
+        <div class="cart-empty-icon">
+          <i class="bi bi-cart3"></i>
+        </div>
+        <h3 class="cart-empty-title">Your cart is empty</h3>
+        <p class="cart-empty-text">Browse our products and add items to get started.</p>
+        <button type="button" class="cart-empty-btn" (click)="onCloseClick()">
+          Continue Shopping
+        </button>
+      </div>
+    } @else {
+      <ul class="cart-items">
+        @for (line of cartLines(); track line.productId) {
+          <li class="cart-item">
+            <div class="cart-item-image">
+              <img [src]="line.imageUrl" [alt]="line.name" />
+            </div>
+            <div class="cart-item-details">
+              <div class="cart-item-top">
+                <h3 class="cart-item-name">{{ line.name }}</h3>
+                <button
+                  type="button"
+                  class="cart-item-remove"
+                  (click)="onRemoveItem(line.productId)"
+                  aria-label="Remove item">
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </div>
+              <div class="cart-item-pricing">
+                <span class="cart-item-price">{{ line.unitPriceLabel }}</span>
+                @if (line.originalPriceLabel) {
+                  <span class="cart-item-original">{{ line.originalPriceLabel }}</span>
+                }
+              </div>
+              <div class="cart-item-footer">
+                <div class="cart-qty-control">
+                  <button
+                    type="button"
+                    class="cart-qty-btn"
+                    (click)="onDecreaseQuantity(line.productId, line.qty)"
+                    aria-label="Decrease quantity">
+                    <i class="bi bi-dash"></i>
+                  </button>
+                  <span class="cart-qty-value">{{ line.qty }}</span>
+                  <button
+                    type="button"
+                    class="cart-qty-btn"
+                    (click)="onIncreaseQuantity(line.productId, line.qty)"
+                    aria-label="Increase quantity">
+                    <i class="bi bi-plus"></i>
+                  </button>
+                </div>
+                <span class="cart-item-total">{{ line.lineTotalLabel }}</span>
+              </div>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
+  @if (cartLines().length > 0) {
+    <div class="cart-panel-footer">
+      <div class="cart-summary">
+        <div class="cart-summary-row">
+          <span>Subtotal</span>
+          <span>{{ subtotalLabel() }}</span>
+        </div>
+        @if (discount() > 0) {
+          <div class="cart-summary-row cart-summary-discount">
+            <span>Discount</span>
+            <span>-{{ discountLabel() }}</span>
+          </div>
+        }
+        <div class="cart-summary-row cart-summary-total">
+          <span>Total</span>
+          <span>{{ totalLabel() }}</span>
+        </div>
+      </div>
+      <button type="button" class="cart-checkout-btn" (click)="onSubmitOrderClick()">
+        <i class="bi bi-credit-card"></i>
+        Checkout
+      </button>
+    </div>
+  }
+</aside>
+
+@if (showOrderPopup()) {
+  <app-order-popup
+    [cartItems]="cartService.currentCartState"
+    (submitOrder)="onOrderSubmit($event)"
+    (closePopup)="onCloseOrderPopup()">
+  </app-order-popup>
+}

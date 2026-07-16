@@ -1,0 +1,8 @@
+.home-page {
+  background: var(--client-bg);
+  min-height: calc(100vh - 160px);
+}
+
+.home-content {
+  padding-bottom: 3rem;
+}

@@ -1,0 +1,293 @@
+<div class="grid">
+  <div class="col-12">
+    <p-toast></p-toast>
+
+    <app-admin-page-header
+      title="Company Settings"
+      icon="pi pi-building"
+      subtitle="Manage your store identity, branding, and social links">
+      <button
+        pButton
+        pRipple
+        label="Edit Settings"
+        icon="pi pi-pencil"
+        class="p-button-success"
+        [disabled]="loading()"
+        (click)="openEditPanel()">
+      </button>
+    </app-admin-page-header>
+
+    <div class="card">
+      @if (loading()) {
+        <div class="settings-loading">
+          <i class="pi pi-spin pi-spinner"></i>
+          <span>Loading company settings...</span>
+        </div>
+      } @else {
+        <div class="settings-overview">
+          <div class="settings-brand">
+            <div class="settings-logo-wrap">
+              @if (logoPreview()) {
+                <img
+                  [src]="logoPreview()"
+                  alt="Company logo"
+                  class="settings-logo-image" />
+              } @else {
+                <div class="settings-logo-placeholder">
+                  <i class="pi pi-image"></i>
+                </div>
+              }
+            </div>
+            <div class="settings-brand-text">
+              <span class="settings-brand-label">Company Name</span>
+              <h2 class="settings-brand-name">{{ companyName() }}</h2>
+              <p class="settings-brand-hint">Displayed across your storefront and admin panel</p>
+            </div>
+          </div>
+
+          <div class="settings-meta-grid">
+            <div class="settings-meta-item">
+              <span class="settings-meta-icon">
+                <i class="pi pi-tag"></i>
+              </span>
+              <div class="settings-meta-body">
+                <span class="settings-meta-label">Brand Name</span>
+                <span class="settings-meta-value">{{ companyName() }}</span>
+              </div>
+            </div>
+            <div class="settings-meta-item">
+              <span class="settings-meta-icon">
+                <i class="pi pi-image"></i>
+              </span>
+              <div class="settings-meta-body">
+                <span class="settings-meta-label">Logo Status</span>
+                <span class="settings-meta-value">{{ logoStatusLabel() }}</span>
+              </div>
+            </div>
+            <div class="settings-meta-item">
+              <span class="settings-meta-icon settings-meta-icon-social">
+                <i class="pi pi-share-alt"></i>
+              </span>
+              <div class="settings-meta-body">
+                <span class="settings-meta-label">Social Links</span>
+                <span class="settings-meta-value">{{ configuredSocialCount() }} configured</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-social-section">
+            <div class="settings-social-header">
+              <h3 class="settings-social-title">Contact & Social Media</h3>
+              <p class="settings-social-desc">Links shown in the storefront header and footer when configured</p>
+            </div>
+            <div class="settings-social-grid">
+              <div class="settings-social-card">
+                <span class="settings-social-card-icon facebook">
+                  <i class="pi pi-facebook"></i>
+                </span>
+                <div class="settings-social-card-body">
+                  <span class="settings-social-card-label">Facebook</span>
+                  @if (facebookUrl()) {
+                    <span class="settings-social-card-value">{{ facebookUrl() }}</span>
+                  } @else {
+                    <span class="settings-social-card-empty">{{ facebookStatusLabel() }}</span>
+                  }
+                </div>
+              </div>
+              <div class="settings-social-card">
+                <span class="settings-social-card-icon instagram">
+                  <i class="pi pi-instagram"></i>
+                </span>
+                <div class="settings-social-card-body">
+                  <span class="settings-social-card-label">Instagram</span>
+                  @if (instagramUrl()) {
+                    <span class="settings-social-card-value">{{ instagramUrl() }}</span>
+                  } @else {
+                    <span class="settings-social-card-empty">{{ instagramStatusLabel() }}</span>
+                  }
+                </div>
+              </div>
+              <div class="settings-social-card">
+                <span class="settings-social-card-icon snapchat">
+                  <i class="pi pi-send"></i>
+                </span>
+                <div class="settings-social-card-body">
+                  <span class="settings-social-card-label">Snapchat</span>
+                  @if (snapchatUrl()) {
+                    <span class="settings-social-card-value">{{ snapchatUrl() }}</span>
+                  } @else {
+                    <span class="settings-social-card-empty">{{ snapchatStatusLabel() }}</span>
+                  }
+                </div>
+              </div>
+              <div class="settings-social-card">
+                <span class="settings-social-card-icon phone">
+                  <i class="pi pi-phone"></i>
+                </span>
+                <div class="settings-social-card-body">
+                  <span class="settings-social-card-label">Phone Number</span>
+                  @if (phoneNumber()) {
+                    <span class="settings-social-card-value">{{ phoneNumber() }}</span>
+                  } @else {
+                    <span class="settings-social-card-empty">{{ phoneStatusLabel() }}</span>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <app-side-panel
+      [visible]="panelVisible()"
+      title="Edit Company Settings"
+      subtitle="Update your store name, logo, and social links"
+      icon="pi pi-building"
+      width="32rem"
+      (visibleChange)="onPanelVisibleChange($event)">
+      <div class="admin-panel-form">
+        <div class="form-section-card">
+          <div class="form-section-header">
+            <span class="form-section-icon">
+              <i class="pi pi-id-card"></i>
+            </span>
+            <div class="form-section-heading">
+              <h3 class="form-section-title">Brand Identity</h3>
+              <p class="form-section-desc">Company name shown to customers and in the admin</p>
+            </div>
+          </div>
+
+          <div class="form-section-content">
+            <div class="form-field">
+              <label for="editCompanyName">Company Name</label>
+              <input
+                id="editCompanyName"
+                type="text"
+                pInputText
+                class="form-control-full"
+                placeholder="Enter company name"
+                [ngModel]="editCompanyName()"
+                (ngModelChange)="onEditCompanyNameChange($event)" />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section-card">
+          <div class="form-section-header">
+            <span class="form-section-icon">
+              <i class="pi pi-image"></i>
+            </span>
+            <div class="form-section-heading">
+              <h3 class="form-section-title">Company Logo</h3>
+              <p class="form-section-desc">Upload a logo for your storefront header and admin</p>
+            </div>
+          </div>
+
+          <div class="form-section-content">
+            <div class="form-field">
+              <label>Logo Image</label>
+              <input
+                #logoInput
+                type="file"
+                accept="image/*"
+                class="image-upload-input"
+                (change)="onLogoSelected($event)" />
+              <button type="button" class="image-upload-zone" (click)="logoInput.click()">
+                <span class="image-upload-icon">
+                  <i class="pi pi-cloud-upload"></i>
+                </span>
+                <span class="image-upload-title">Click to upload logo</span>
+                <span class="image-upload-hint">PNG or JPG, up to a few MB</span>
+              </button>
+              @if (editLogoPreview()) {
+                <div class="image-preview-card">
+                  <img [src]="editLogoPreview()" alt="Company logo preview" />
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section-card">
+          <div class="form-section-header">
+            <span class="form-section-icon">
+              <i class="pi pi-share-alt"></i>
+            </span>
+            <div class="form-section-heading">
+              <h3 class="form-section-title">Social & Contact Links</h3>
+              <p class="form-section-desc">Leave blank to hide the icon on the storefront</p>
+            </div>
+          </div>
+
+          <div class="form-section-content">
+            <div class="form-field">
+              <label for="editFacebookUrl">Facebook URL</label>
+              <input
+                id="editFacebookUrl"
+                type="url"
+                pInputText
+                class="form-control-full"
+                placeholder="https://facebook.com/yourpage"
+                [ngModel]="editFacebookUrl()"
+                (ngModelChange)="onEditFacebookUrlChange($event)" />
+            </div>
+            <div class="form-field">
+              <label for="editInstagramUrl">Instagram URL</label>
+              <input
+                id="editInstagramUrl"
+                type="url"
+                pInputText
+                class="form-control-full"
+                placeholder="https://instagram.com/yourpage"
+                [ngModel]="editInstagramUrl()"
+                (ngModelChange)="onEditInstagramUrlChange($event)" />
+            </div>
+            <div class="form-field">
+              <label for="editSnapchatUrl">Snapchat URL</label>
+              <input
+                id="editSnapchatUrl"
+                type="url"
+                pInputText
+                class="form-control-full"
+                placeholder="https://snapchat.com/add/yourusername"
+                [ngModel]="editSnapchatUrl()"
+                (ngModelChange)="onEditSnapchatUrlChange($event)" />
+            </div>
+            <div class="form-field">
+              <label for="editPhoneNumber">Phone Number</label>
+              <input
+                id="editPhoneNumber"
+                type="tel"
+                pInputText
+                class="form-control-full"
+                placeholder="+962 7X XXX XXXX"
+                [ngModel]="editPhoneNumber()"
+                (ngModelChange)="onEditPhoneNumberChange($event)" />
+              <span class="field-hint">Used for the call icon in the header and footer</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div panelFooter class="admin-panel-footer">
+        <button
+          pButton
+          pRipple
+          type="button"
+          label="Cancel"
+          icon="pi pi-times"
+          class="p-button-outlined p-button-secondary"
+          [disabled]="saving()"
+          (click)="hidePanel()">
+        </button>
+        <p-button
+          label="Save Changes"
+          icon="pi pi-check"
+          [loading]="saving()"
+          (onClick)="saveChanges()">
+        </p-button>
+      </div>
+    </app-side-panel>
+  </div>
+</div>
