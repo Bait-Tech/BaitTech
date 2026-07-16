@@ -47,12 +47,12 @@ jobs:
         run: >
           dotnet publish ECommercePlatform.Server/ECommercePlatform.Server.csproj
           -c Release
-          -r win-x86
-          --self-contained true
+          --self-contained false
           -o ./publish
           /p:SkipSpaProjectReference=true
+          /p:AspNetCoreHostingModel=OutOfProcess
 
-      - name: Write production connection string
+      - name: Write production settings
         env:
           DB_CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
         run: |
@@ -76,16 +76,34 @@ jobs:
             json.dump(settings, f, indent=2)
           PY
 
-      - name: Configure web.config for shared hosting
+      - name: Configure web.config for SmarterASP
         run: |
           mkdir -p ./publish/logs
           python3 - <<'PY'
           from pathlib import Path
           web_config = Path("./publish/web.config")
-          content = web_config.read_text(encoding="utf-8")
-          content = content.replace('hostingModel="inprocess"', 'hostingModel="outofprocess"')
-          content = content.replace('stdoutLogEnabled="false"', 'stdoutLogEnabled="true"')
-          web_config.write_text(content, encoding="utf-8")
+          content = """<?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <location path="." inheritInChildApplications="false">
+              <system.webServer>
+                <handlers>
+                  <add name="aspNetCore" path="*" verb="*" modules="AspNetCoreModuleV2" resourceType="Unspecified" />
+                </handlers>
+                <aspNetCore processPath="dotnet" arguments=".\\ECommercePlatform.Server.dll" stdoutLogEnabled="true" stdoutLogFile=".\\logs\\stdout" hostingModel="outofprocess">
+                  <environmentVariables>
+                    <environmentVariable name="ASPNETCORE_ENVIRONMENT" value="Production" />
+                  </environmentVariables>
+                </aspNetCore>
+                <httpErrors errorMode="Detailed" />
+              </system.webServer>
+            </location>
+            <system.web>
+              <customErrors mode="Off" />
+            </system.web>
+          </configuration>
+          """
+          cleaned = "\n".join(line.lstrip() for line in content.strip().splitlines()) + "\n"
+          web_config.write_text(cleaned, encoding="utf-8")
           PY
 
       - name: Deploy via FTP

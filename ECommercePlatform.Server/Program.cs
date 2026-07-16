@@ -77,11 +77,6 @@ builder.Services.AddAuthentication(option =>
 }
 );
 
-
-builder.Services.AddDbContext<ApplicationDBContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-
 builder.Services.AddAuthorization();
 
 
@@ -89,8 +84,7 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    await ApplyDatabaseMigrationsAsync(scope.ServiceProvider);
-    await DatabaseSeeder.SeedAsync(scope.ServiceProvider);
+    await InitializeDatabaseAsync(scope.ServiceProvider);
 }
 
 
@@ -104,14 +98,12 @@ if (!Directory.Exists(webRootPath))
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseHttpsRedirection();
 }
-
-app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");
 
@@ -123,8 +115,19 @@ app.MapFallbackToFile("/index.html");
 
 app.Run();
 
-static async Task ApplyDatabaseMigrationsAsync(IServiceProvider serviceProvider)
+static async Task InitializeDatabaseAsync(IServiceProvider serviceProvider)
 {
+    var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("DatabaseStartup");
     var context = serviceProvider.GetRequiredService<ApplicationDBContext>();
-    await context.Database.MigrateAsync();
+
+    try
+    {
+        await context.Database.MigrateAsync();
+        await DatabaseSeeder.SeedAsync(serviceProvider);
+    }
+    catch (Exception exception)
+    {
+        logger.LogError(exception, "Database migration or seeding failed.");
+        throw;
+    }
 }
