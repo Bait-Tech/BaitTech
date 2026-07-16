@@ -47,7 +47,7 @@ jobs:
         run: >
           dotnet publish ECommercePlatform.Server/ECommercePlatform.Server.csproj
           -c Release
-          -r win-x64
+          -r win-x86
           --self-contained true
           -o ./publish
           /p:SkipSpaProjectReference=true
