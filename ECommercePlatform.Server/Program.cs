@@ -89,6 +89,7 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
+    await ApplyDatabaseMigrationsAsync(scope.ServiceProvider);
     await DatabaseSeeder.SeedAsync(scope.ServiceProvider);
 }
 
@@ -121,3 +122,9 @@ app.MapControllers();
 app.MapFallbackToFile("/index.html");
 
 app.Run();
+
+static async Task ApplyDatabaseMigrationsAsync(IServiceProvider serviceProvider)
+{
+    var context = serviceProvider.GetRequiredService<ApplicationDBContext>();
+    await context.Database.MigrateAsync();
+}
