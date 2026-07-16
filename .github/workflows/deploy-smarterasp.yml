@@ -76,6 +76,18 @@ jobs:
             json.dump(settings, f, indent=2)
           PY
 
+      - name: Configure web.config for shared hosting
+        run: |
+          mkdir -p ./publish/logs
+          python3 - <<'PY'
+          from pathlib import Path
+          web_config = Path("./publish/web.config")
+          content = web_config.read_text(encoding="utf-8")
+          content = content.replace('hostingModel="inprocess"', 'hostingModel="outofprocess"')
+          content = content.replace('stdoutLogEnabled="false"', 'stdoutLogEnabled="true"')
+          web_config.write_text(content, encoding="utf-8")
+          PY
+
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
