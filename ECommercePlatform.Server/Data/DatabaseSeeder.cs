@@ -65,6 +65,20 @@ namespace ECommercePlatform.Server.Data
 
             if (existingUser is not null)
             {
+                await EnsureAdminRoleAsync(userManager, existingUser);
+                return;
+            }
+
+            var previousAdmin = await userManager.FindByEmailAsync("admin@baittech.com");
+
+            if (previousAdmin is not null)
+            {
+                await userManager.SetUserNameAsync(previousAdmin, settings.AdminEmail);
+                await userManager.SetEmailAsync(previousAdmin, settings.AdminEmail);
+                previousAdmin.FirstName = settings.AdminFirstName;
+                previousAdmin.LastName = settings.AdminLastName;
+                await userManager.UpdateAsync(previousAdmin);
+                await EnsureAdminRoleAsync(userManager, previousAdmin);
                 return;
             }
 
@@ -79,6 +93,16 @@ namespace ECommercePlatform.Server.Data
             var result = await userManager.CreateAsync(user, settings.AdminPassword);
 
             if (!result.Succeeded)
+            {
+                return;
+            }
+
+            await EnsureAdminRoleAsync(userManager, user);
+        }
+
+        private static async Task EnsureAdminRoleAsync(UserManager<ApplicationUser> userManager, ApplicationUser user)
+        {
+            if (await userManager.IsInRoleAsync(user, Roles.Admin.ToString()))
             {
                 return;
             }
