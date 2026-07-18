@@ -21,6 +21,9 @@ export class CategoriesComponent implements OnInit {
   panelIcon = signal('pi pi-plus');
   saveButtonLabel = signal('Create Category');
   saving = signal(false);
+  imagePreview = signal('');
+  tableFirst = signal(0);
+  readonly pageSize = 10;
   submitted = false;
 
   constructor(
@@ -36,7 +39,9 @@ export class CategoriesComponent implements OnInit {
     this.loading.set(true);
     this.categoryService.getCategories().subscribe({
       next: (data) => {
-        this.categories.set(data ?? []);
+        const items = data ?? [];
+        this.categories.set(items);
+        this.applyTableFirst(items.length);
         this.loading.set(false);
       },
       error: () => {
@@ -53,6 +58,7 @@ export class CategoriesComponent implements OnInit {
 
   openNew() {
     this.category = { id: 0, name: '' };
+    this.imagePreview.set('');
     this.submitted = false;
     this.panelTitle.set('New Category');
     this.panelSubtitle.set('Add a new product category');
@@ -67,6 +73,7 @@ export class CategoriesComponent implements OnInit {
 
   editCategory(category: ICategories) {
     this.category = { ...category };
+    this.imagePreview.set(category.imageUrl ?? '');
     this.submitted = false;
     this.panelTitle.set('Edit Category');
     this.panelSubtitle.set('Update category name and image');
@@ -84,6 +91,10 @@ export class CategoriesComponent implements OnInit {
 
   onDeletePanelVisibleChange(visible: boolean): void {
     this.deletePanelVisible.set(visible);
+  }
+
+  onTablePage(event: { first?: number | null }): void {
+    this.tableFirst.set(this.normalizeFirst(event.first));
   }
 
   confirmDeleteSelected() {
@@ -128,26 +139,34 @@ export class CategoriesComponent implements OnInit {
     input.value = '';
   }
 
+  onImageUrlInput(value: string): void {
+    const trimmedUrl = value.trim();
+    this.category.imageUrl = trimmedUrl;
+    this.category.imageFile = undefined;
+    this.imagePreview.set(trimmedUrl);
+  }
+
   saveCategory() {
     this.submitted = true;
     if (!this.category.name?.trim()) {
       return;
     }
     this.saving.set(true);
-    if (this.category.id) {
+    const isEditing = this.category.id > 0;
+    if (isEditing) {
       this.categoryService.updateCategory(this.category).subscribe({
-        next: () => this.onSaveSuccess('Category updated'),
+        next: () => this.onSaveSuccess('Category updated', true),
         error: () => this.onSaveError('Failed to update category'),
       });
       return;
     }
     this.categoryService.createCategory(this.category).subscribe({
-      next: () => this.onSaveSuccess('Category created'),
+      next: () => this.onSaveSuccess('Category created', false),
       error: () => this.onSaveError('Failed to create category'),
     });
   }
 
-  private onSaveSuccess(detail: string): void {
+  private onSaveSuccess(detail: string, isEditing: boolean): void {
     this.saving.set(false);
     this.messageService.add({
       severity: 'success',
@@ -155,6 +174,9 @@ export class CategoriesComponent implements OnInit {
       detail,
       life: 3000,
     });
+    if (!isEditing) {
+      this.tableFirst.set(0);
+    }
     this.loadCategories();
     this.hidePanel();
   }
@@ -172,7 +194,9 @@ export class CategoriesComponent implements OnInit {
   private readImagePreview(file: File): void {
     const reader = new FileReader();
     reader.onload = () => {
-      this.category.imageUrl = reader.result as string;
+      const preview = reader.result as string;
+      this.category.imageUrl = preview;
+      this.imagePreview.set(preview);
     };
     reader.readAsDataURL(file);
   }
@@ -180,5 +204,26 @@ export class CategoriesComponent implements OnInit {
   private resetPanel(): void {
     this.submitted = false;
     this.category = { id: 0, name: '' };
+    this.imagePreview.set('');
+  }
+
+  private normalizeFirst(first: number | null | undefined): number {
+    if (first == null || !Number.isFinite(first) || first < 0) {
+      return 0;
+    }
+
+    return Math.floor(first);
+  }
+
+  private applyTableFirst(totalCount: number): void {
+    if (totalCount <= 0) {
+      this.tableFirst.set(0);
+      return;
+    }
+
+    const maxFirst = Math.floor((totalCount - 1) / this.pageSize) * this.pageSize;
+    if (this.tableFirst() > maxFirst) {
+      this.tableFirst.set(maxFirst);
+    }
   }
 }

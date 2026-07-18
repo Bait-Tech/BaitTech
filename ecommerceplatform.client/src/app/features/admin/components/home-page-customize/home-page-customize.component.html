@@ -1,8 +1,122 @@
 <div class="container">
   <app-admin-page-header title="Homepage Customizer" icon="pi pi-desktop"
     subtitle="Customize your e-commerce homepage sections">
+    <p-button
+      label="Save Changes"
+      icon="pi pi-check"
+      styleClass="p-button-success"
+      [loading]="pageSaving()"
+      (onClick)="savePage()"
+    ></p-button>
   </app-admin-page-header>
 
   <app-hero-section></app-hero-section>
   <app-products-section></app-products-section>
+
+  <p-toast></p-toast>
+
+  <div id="background-video-section" class="container-fluid p-0 mt-4">
+    <div class="row m-0 bg-white rounded shadow-sm overflow-hidden mb-4">
+      <div class="col-12">
+        <div class="row align-items-center bg-light p-2 border-bottom m-0">
+          <div class="col-12">
+            <h4 class="m-0">Background Video</h4>
+          </div>
+        </div>
+
+        <div class="background-video-body">
+          <div class="background-video-header">
+            <div class="background-video-heading">
+              <span class="background-video-icon">
+                <i class="pi pi-video"></i>
+              </span>
+              <div>
+                <h5 class="background-video-title">Layout Background Video</h5>
+                <p class="background-video-desc">
+                  Add a video URL to play as a full-screen background behind the client storefront layout
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="background-video-panel">
+            <div class="background-video-input-row">
+              <input
+                type="url"
+                class="background-video-input"
+                placeholder="https://www.youtube.com/watch?v=... or direct .mp4 URL"
+                [value]="backgroundVideoUrl()"
+                (input)="onBackgroundVideoUrlInput($event)"
+              />
+              @if (backgroundVideoUrl()) {
+                <button
+                  type="button"
+                  class="background-video-clear-btn"
+                  (click)="clearBackgroundVideoUrl()"
+                >
+                  Clear
+                </button>
+              }
+            </div>
+
+            <label class="background-video-active-toggle">
+              <input
+                type="checkbox"
+                [checked]="backgroundVideoActive()"
+                (change)="onBackgroundVideoActiveChange($event)"
+              />
+              <span>Enable background video on client layout</span>
+            </label>
+
+            @if (isYoutubeBackgroundVideoUrl()) {
+              <div class="background-video-preview-chip">
+                <img
+                  [src]="backgroundVideoPreviewThumbnail()"
+                  alt="YouTube preview"
+                  class="background-video-preview-thumb"
+                />
+                <span class="background-video-preview-label">
+                  YouTube video detected — it will autoplay muted behind the storefront
+                </span>
+              </div>
+            }
+          </div>
+
+          @if (hasBackgroundVideoPreview()) {
+            <div class="background-video-preview-section">
+              <h6 class="background-video-preview-label-heading">Live Preview</h6>
+              <div class="background-video-preview-frame">
+                @if (backgroundVideoPreview().isYoutubeVideo) {
+                  <iframe
+                    [src]="backgroundVideoPreview().safeVideoEmbedUrl"
+                    title="Background video preview"
+                    class="background-video-preview-media background-video-preview-iframe"
+                    allow="autoplay; encrypted-media; picture-in-picture"
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    allowfullscreen>
+                  </iframe>
+                }
+                @if (!backgroundVideoPreview().isYoutubeVideo) {
+                  <video
+                    [src]="backgroundVideoPreview().videoUrl"
+                    class="background-video-preview-media"
+                    muted
+                    loop
+                    playsinline
+                    autoplay>
+                  </video>
+                }
+                <div class="background-video-preview-overlay"></div>
+              </div>
+            </div>
+          } @else {
+            <div class="background-video-empty-state">
+              <i class="pi pi-video"></i>
+              <span>No background video configured yet</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

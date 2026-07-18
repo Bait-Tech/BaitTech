@@ -10,6 +10,7 @@ export interface IProductDetailsView {
   discountPercent: number;
   savingsAmount: number;
   outOfStock: boolean;
-  stockQuantity: number;
+  tracksStock: boolean;
+  stockQuantity?: number | null;
   lowStock: boolean;
 }

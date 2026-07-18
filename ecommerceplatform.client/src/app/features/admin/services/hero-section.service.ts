@@ -19,14 +19,14 @@ export class HeroSectionService {
       .pipe(map((data) => this.mapHeroSection(data)));
   }
 
-  insertHeroSection(heroSection: IHeroSection): Observable<any> {
+  insertHeroSection(heroSection: IHeroSection): Observable<number> {
     const formData = this.createFormData(heroSection);
-    return this.http.post(`${this.apiUrl}`, formData);
+    return this.http.post<number>(`${this.apiUrl}`, formData);
   }
 
-  updateHeroSection(heroSection: IHeroSection): Observable<any> {
+  updateHeroSection(heroSection: IHeroSection): Observable<IHeroSection> {
     const formData = this.createFormData(heroSection);
-    return this.http.put(`${this.apiUrl}`, formData);
+    return this.http.put<IHeroSection>(`${this.apiUrl}`, formData);
   }
 
   private mapHeroSection(data: unknown): IHeroSection {
@@ -55,6 +55,7 @@ export class HeroSectionService {
         id: this.readNumber(image, 'id', 'ID'),
         isMain: this.readBoolean(image, 'isMain', 'IsMain'),
         imageUrl: this.readString(image, 'imageUrl', 'ImageUrl'),
+        videoUrl: this.readString(image, 'videoUrl', 'VideoUrl'),
         linkUrl: this.readString(image, 'linkUrl', 'LinkUrl'),
       });
     }
@@ -136,10 +137,17 @@ export class HeroSectionService {
         `HeroSectionImageDTOs[${index}].IsMain`,
         image.isMain.toString()
       );
-      formData.append(`HeroSectionImageDTOs[${index}].LinkUrl`, image.linkUrl);
+      formData.append(
+        `HeroSectionImageDTOs[${index}].LinkUrl`,
+        this.normalizeText(image.linkUrl)
+      );
       formData.append(
         `HeroSectionImageDTOs[${index}].ImageUrl`,
-        image.imageUrl
+        this.normalizeText(image.imageUrl)
+      );
+      formData.append(
+        `HeroSectionImageDTOs[${index}].VideoUrl`,
+        this.normalizeText(image.videoUrl)
       );
 
       if (image.imageFile) {
@@ -152,5 +160,9 @@ export class HeroSectionService {
     });
 
     return formData;
+  }
+
+  private normalizeText(value?: string): string {
+    return value?.trim() ?? '';
   }
 }

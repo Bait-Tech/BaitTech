@@ -2,17 +2,8 @@
   <div class="row m-0 bg-white rounded shadow-sm overflow-hidden">
     <div class="col-12">
       <div class="row align-items-center bg-light p-2 border-bottom m-0">
-        <div class="col-8 col-md-10">
+        <div class="col-12">
           <h4 class="m-0">Hero Section</h4>
-        </div>
-        <div class="col-4 col-md-2 text-end">
-          <p-button
-            class="w-100"
-            label="Save Changes"
-            icon="pi pi-check"
-            styleClass="p-button-success"
-            (onClick)="saveChanges()"
-          ></p-button>
         </div>
       </div>
 
@@ -23,12 +14,12 @@
               <i class="pi pi-images"></i>
             </span>
             <div>
-              <h5 class="hero-images-title">Hero Images</h5>
-              <p class="hero-images-desc">Upload banner images for your homepage carousel</p>
+              <h5 class="hero-images-title">Hero Slides</h5>
+              <p class="hero-images-desc">Upload banner images or add video URLs for your homepage carousel</p>
             </div>
           </div>
           @if (heroImages().length > 0) {
-            <span class="hero-images-count">{{ heroImages().length }} images</span>
+            <span class="hero-images-count">{{ heroImages().length }} slides</span>
           }
         </div>
 
@@ -48,27 +39,102 @@
           <span class="hero-upload-hint">16:9 recommended · PNG or JPG</span>
         </button>
 
+        <div class="hero-video-panel">
+          <div class="hero-video-panel-heading">
+            <span class="hero-video-panel-icon">
+              <i class="pi pi-youtube"></i>
+            </span>
+            <div>
+              <h6 class="hero-video-panel-title">Video Slide</h6>
+              <p class="hero-video-panel-desc">Paste a YouTube link or direct video URL to add a hero video slide</p>
+            </div>
+          </div>
+
+          <div class="hero-video-add">
+            <input
+              type="url"
+              class="hero-video-input"
+              placeholder="https://www.youtube.com/watch?v=..."
+              [value]="videoUrlInput()"
+              (input)="onVideoUrlInput($event)"
+            />
+            <button
+              type="button"
+              class="hero-video-add-btn"
+              [disabled]="!hasValidVideoUrlInput()"
+              (click)="addVideoSlide()"
+            >
+              Add Video Slide
+            </button>
+          </div>
+
+          @if (isYoutubeVideoUrlInput()) {
+            <div class="hero-video-preview-chip">
+              <img
+                [src]="videoUrlPreviewThumbnail()"
+                alt="YouTube preview"
+                class="hero-video-preview-thumb"
+              />
+              <span class="hero-video-preview-label">YouTube video detected — it will autoplay muted in the hero banner</span>
+            </div>
+          }
+        </div>
+
         @if (heroImages().length > 0) {
           <div class="hero-gallery">
             @for (item of heroImages(); track $index; let i = $index) {
               <div class="hero-card">
-                <img
-                  [src]="item.imageUrl"
-                  [alt]="'Hero image ' + (i + 1)"
-                  class="hero-card-preview"
-                />
+                @if (item.videoUrl) {
+                  @if (item.isYoutubeVideo) {
+                    <img
+                      [src]="item.videoThumbnailUrl"
+                      [alt]="'YouTube video ' + (i + 1)"
+                      class="hero-card-preview hero-card-video"
+                    />
+                  }
+                  @if (!item.isYoutubeVideo) {
+                    <video
+                      [src]="item.videoUrl"
+                      class="hero-card-preview hero-card-video"
+                      muted
+                      loop
+                      playsinline
+                      autoplay>
+                    </video>
+                  }
+                  <span class="hero-video-badge">{{ item.isYoutubeVideo ? 'YouTube' : 'Video' }}</span>
+                }
+                @if (!item.videoUrl) {
+                  <img
+                    [src]="item.imageUrl"
+                    [alt]="'Hero image ' + (i + 1)"
+                    class="hero-card-preview"
+                  />
+                }
                 @if (item.isMain) {
                   <span class="hero-main-badge">Main</span>
                 }
                 <span class="hero-slide-badge">Slide {{ i + 1 }}</span>
+                @if (item.videoUrl) {
+                  <div class="hero-video-url-bar">
+                    <input
+                      type="url"
+                      class="hero-video-url-input"
+                      [value]="item.videoUrl"
+                      (change)="onVideoUrlChange($event, i)"
+                    />
+                  </div>
+                }
                 <div class="hero-card-overlay">
-                  <input
-                    [id]="'editImage' + i"
-                    type="file"
-                    accept="image/*"
-                    class="hero-upload-input"
-                    (change)="onImageChange($event, i)"
-                  />
+                  @if (!item.videoUrl) {
+                    <input
+                      [id]="'editImage' + i"
+                      type="file"
+                      accept="image/*"
+                      class="hero-upload-input"
+                      (change)="onImageChange($event, i)"
+                    />
+                  }
                   <div class="hero-action-toolbar">
                     <button
                       type="button"
@@ -80,18 +146,20 @@
                       <i [ngClass]="item.isMain ? 'pi pi-star-fill' : 'pi pi-star'"></i>
                     </button>
                     <span class="hero-action-divider"></span>
-                    <label
-                      [for]="'editImage' + i"
-                      class="hero-action-btn hero-action-btn-edit"
-                      aria-label="Edit image"
-                    >
-                      <i class="pi pi-pencil"></i>
-                    </label>
-                    <span class="hero-action-divider"></span>
+                    @if (!item.videoUrl) {
+                      <label
+                        [for]="'editImage' + i"
+                        class="hero-action-btn hero-action-btn-edit"
+                        aria-label="Edit image"
+                      >
+                        <i class="pi pi-pencil"></i>
+                      </label>
+                      <span class="hero-action-divider"></span>
+                    }
                     <button
                       type="button"
                       class="hero-action-btn hero-action-btn-danger"
-                      aria-label="Remove image"
+                      aria-label="Remove slide"
                       (click)="removeImage(i)"
                     >
                       <i class="pi pi-trash"></i>
@@ -104,15 +172,15 @@
 
           <div class="hero-preview-section">
             <h6 class="hero-preview-label">Live Preview</h6>
-            <div id="heroPreviewCarousel" class="carousel slide hero-preview-carousel" data-bs-ride="carousel">
+            <div id="heroPreviewCarousel" class="carousel slide carousel-fade hero-preview-carousel">
               <div class="carousel-indicators hero-preview-indicators">
                 @for (item of heroImages(); track $index; let i = $index) {
                   <button
                     type="button"
                     data-bs-target="#heroPreviewCarousel"
                     [attr.data-bs-slide-to]="i"
-                    [class.active]="item.isMain"
-                    [attr.aria-current]="item.isMain ? 'true' : null"
+                    [class.active]="i === activeSlideIndex()"
+                    [attr.aria-current]="i === activeSlideIndex() ? 'true' : null"
                     [attr.aria-label]="'Slide ' + (i + 1)"
                   ></button>
                 }
@@ -120,13 +188,48 @@
 
               <div class="carousel-inner">
                 @for (item of heroImages(); track $index; let i = $index) {
-                  <div class="carousel-item" [class.active]="item.isMain">
+                  <div class="carousel-item" [class.active]="i === activeSlideIndex()">
                     <div class="hero-preview-ratio">
-                      <img
-                        [src]="item.imageUrl"
-                        [alt]="'Hero preview ' + (i + 1)"
-                        class="hero-preview-image"
-                      />
+                      @if (item.videoUrl) {
+                        @if (item.isYoutubeVideo) {
+                          @if (i !== activeSlideIndex()) {
+                            <img
+                              [src]="item.videoThumbnailUrl"
+                              [alt]="'YouTube preview ' + (i + 1)"
+                              class="hero-preview-image"
+                            />
+                          }
+                          @if (i === activeSlideIndex()) {
+                            <div class="hero-video-cover">
+                              <iframe
+                                [src]="item.safeVideoEmbedUrl"
+                                title="Hero preview video"
+                                class="hero-preview-video hero-preview-iframe"
+                                allow="autoplay; encrypted-media; picture-in-picture"
+                                referrerpolicy="strict-origin-when-cross-origin"
+                                allowfullscreen>
+                              </iframe>
+                            </div>
+                          }
+                        }
+                        @if (!item.isYoutubeVideo) {
+                          <video
+                            [src]="item.videoUrl"
+                            class="hero-preview-video"
+                            muted
+                            loop
+                            playsinline
+                            autoplay>
+                          </video>
+                        }
+                      }
+                      @if (!item.videoUrl) {
+                        <img
+                          [src]="item.imageUrl"
+                          [alt]="'Hero preview ' + (i + 1)"
+                          class="hero-preview-image"
+                        />
+                      }
                     </div>
                   </div>
                 }
@@ -155,7 +258,7 @@
         } @else {
           <div class="hero-empty-state">
             <i class="pi pi-image"></i>
-            <span>No hero images uploaded yet</span>
+            <span>No hero slides uploaded yet</span>
           </div>
         }
       </div>

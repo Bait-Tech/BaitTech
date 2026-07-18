@@ -48,10 +48,7 @@ namespace ECommercePlatform.Server.Services.Main.SubCategory
                 };
 
 
-                if (entity.ImageFile != null)
-                {
-                    insertedSubCategory.ImageUrl = await _imageHelper.AddImage(entity.ImageFile, "sub-categories");
-                }
+                insertedSubCategory.ImageUrl = await ResolveImageUrlAsync(entity.ImageFile, entity.ImageUrl, "sub-categories");
 
                 await _context.SubCategories.AddAsync(insertedSubCategory);
 
@@ -83,13 +80,13 @@ namespace ECommercePlatform.Server.Services.Main.SubCategory
 
                 existSubCategory.EnglishName = entity.EnglishName;
 
-                if (entity.ImageFile != null)
+                if (entity.ImageFile != null || !string.IsNullOrWhiteSpace(entity.ImageUrl))
                 {
-                    if (!string.IsNullOrEmpty(existSubCategory.ImageUrl))
+                    if (entity.ImageFile != null && !string.IsNullOrEmpty(existSubCategory.ImageUrl))
                     {
                         await _imageHelper.DeleteImage(existSubCategory.ImageUrl);
                     }
-                    existSubCategory.ImageUrl = await _imageHelper.AddImage(entity.ImageFile, "sub-categories");
+                    existSubCategory.ImageUrl = await ResolveImageUrlAsync(entity.ImageFile, entity.ImageUrl, "sub-categories");
                 }
 
                 _context.Update(existSubCategory);
@@ -125,6 +122,21 @@ namespace ECommercePlatform.Server.Services.Main.SubCategory
             _context.RemoveRange(subCategories);
 
             return await _context.SaveChangesAsync() > 0;
+        }
+
+        private async Task<string?> ResolveImageUrlAsync(IFormFile? imageFile, string? imageUrl, string folderName)
+        {
+            if (imageFile != null)
+            {
+                return await _imageHelper.AddImage(imageFile, folderName);
+            }
+
+            if (!string.IsNullOrWhiteSpace(imageUrl))
+            {
+                return imageUrl.Trim();
+            }
+
+            return null;
         }
     }
 }

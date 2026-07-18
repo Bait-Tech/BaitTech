@@ -9,7 +9,7 @@ export interface ISectionProducts {
   subCategoryID?: number;
   price: number;
   discountPrice?: number;
-  stockQuantity: number;
+  stockQuantity?: number | null;
   images: IProductImage[];
   isSelected?: boolean;
   mainImageUrl? : string | null;

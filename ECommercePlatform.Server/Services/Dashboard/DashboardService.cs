@@ -73,7 +73,7 @@ namespace ECommercePlatform.Server.Services.Dashboard
         {
             return await _dbContext.Products
                 .AsNoTracking()
-                .CountAsync(p => p.StockQuantity <= LowStockThreshold);
+                .CountAsync(p => p.StockQuantity.HasValue && p.StockQuantity.Value <= LowStockThreshold);
         }
 
         private async Task<int> GetActiveProductsCount()

@@ -4,6 +4,8 @@ export interface IClientProductCard {
   id: number;
   name: string;
   mainImageUrl: string;
+  hoverImageUrl: string | null;
+  hasHoverImage: boolean;
   displayPrice: number;
   hasDiscount: boolean;
   originalPrice: number;

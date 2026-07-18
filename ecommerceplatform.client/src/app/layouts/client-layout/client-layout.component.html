@@ -1,11 +1,50 @@
-<div class="layout-wrapper" [ngClass]="containerClass">
-<app-nav-bar></app-nav-bar>
-<app-cart-panel></app-cart-panel>
+<div
+  class="layout-wrapper layout-static"
+  [class.layout-has-background-video]="hasBackgroundVideo()"
+>
+  @if (hasBackgroundVideo()) {
+    <div class="layout-background-video" aria-hidden="true">
+      @if (backgroundVideoPreview().isYoutubeVideo) {
+        <img
+          [src]="backgroundVideoPreview().videoThumbnailUrl"
+          alt=""
+          class="layout-background-video-poster"
+        />
+        <div class="layout-background-video-cover">
+          <iframe
+            [src]="backgroundVideoPreview().safeVideoEmbedUrl"
+            title="Background video"
+            class="layout-background-video-iframe"
+            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+            referrerpolicy="strict-origin-when-cross-origin"
+            allowfullscreen>
+          </iframe>
+        </div>
+      }
+      @if (!backgroundVideoPreview().isYoutubeVideo) {
+        <video
+          #backgroundVideo
+          [src]="backgroundVideoPreview().videoUrl"
+          class="layout-background-video-media"
+          muted
+          loop
+          playsinline
+          autoplay>
+        </video>
+      }
+      <div class="layout-background-video-overlay"></div>
+    </div>
+  }
+
+  <app-nav-bar></app-nav-bar>
+  <app-cart-panel></app-cart-panel>
+  <app-contact-widget></app-contact-widget>
   <div class="layout-main-container">
     <div class="layout-main">
       <div class="content-wrapper">
         <router-outlet></router-outlet>
       </div>
     </div>
-  </div>      
+  </div>
   <app-footer></app-footer>
+</div>

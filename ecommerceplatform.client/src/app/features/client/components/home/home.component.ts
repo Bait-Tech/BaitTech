@@ -1,8 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { HeroSectionService } from '../../../admin/services/hero-section.service';
+import { ActivatedRoute } from '@angular/router';
 import { CategoryService } from '../../../admin/services/category.service';
 import { ProductsSectionService } from '../../../admin/services/products-section.service';
-import { IHeroSectionImage } from '../../../admin/interfaces/hero-section-image.interface';
 import { ICategories } from '../../../admin/interfaces/categories.interface';
 import { IProductsSection } from '../../../admin/interfaces/products-section.interface';
 import { ISectionProducts } from '../../../admin/interfaces/section-products.interface';
@@ -10,8 +9,9 @@ import {
   IHomeProductCard,
   IHomeProductsSection,
 } from '../../interfaces/home-product-card.interface';
-
-const DEFAULT_PRODUCT_IMAGE = '/assets/images/seed/tech-1.jpg';
+import { IClientHeroSlide } from '../../interfaces/client-hero-slide.interface';
+import { resolveProductCardImages } from '../../models/product-card-images.model';
+import { isProductOutOfStock } from '../../../../shared/utils/product-stock.util';
 
 const DEFAULT_CATEGORY_IMAGE = '/assets/images/seed/tech-2.jpg';
 
@@ -22,26 +22,26 @@ const DEFAULT_CATEGORY_IMAGE = '/assets/images/seed/tech-2.jpg';
   standalone: false,
 })
 export class HomeComponent implements OnInit {
-  heroImages = signal<IHeroSectionImage[]>([]);
+  heroImages = signal<IClientHeroSlide[]>([]);
   categories = signal<ICategories[]>([]);
   productsSections = signal<IHomeProductsSection[]>([]);
 
   constructor(
-    private heroSectionService: HeroSectionService,
+    private route: ActivatedRoute,
     private categoryService: CategoryService,
     private productsSectionService: ProductsSectionService
   ) {}
 
   ngOnInit() {
-    this.loadHeroSection();
-    this.loadCategories();
-    this.loadProductsSections();
+    const heroImages = this.route.snapshot.data['heroImages'] as IClientHeroSlide[] | undefined;
+    this.heroImages.set(heroImages ?? []);
+    this.scheduleSecondaryContentLoad();
   }
 
-  private loadHeroSection() {
-    this.heroSectionService.getHeroSection().subscribe((section) => {
-      const images = section.heroSectionImageDTOs ?? [];
-      this.heroImages.set(images);
+  private scheduleSecondaryContentLoad() {
+    queueMicrotask(() => {
+      this.loadCategories();
+      this.loadProductsSections();
     });
   }
 
@@ -101,18 +101,21 @@ export class HomeComponent implements OnInit {
   private mapProductCard(product: ISectionProducts): IHomeProductCard {
     const hasDiscount = this.hasValidDiscount(product.price, product.discountPrice);
     const displayPrice = hasDiscount ? product.discountPrice! : product.price;
+    const cardImages = resolveProductCardImages(product.images, product.mainImageUrl);
 
     return {
       id: product.id ?? 0,
       name: product.name,
-      mainImageUrl: this.resolveProductImage(product),
+      mainImageUrl: cardImages.mainImageUrl,
+      hoverImageUrl: cardImages.hoverImageUrl,
+      hasHoverImage: cardImages.hasHoverImage,
       displayPrice,
       hasDiscount,
       originalPrice: product.price,
       discountPercent: hasDiscount
         ? this.calculateDiscountPercent(product.price, product.discountPrice!)
         : 0,
-      outOfStock: product.stockQuantity === 0,
+      outOfStock: isProductOutOfStock(product.stockQuantity),
       product,
     };
   }
@@ -123,23 +126,6 @@ export class HomeComponent implements OnInit {
 
   private calculateDiscountPercent(price: number, discountPrice: number): number {
     return Math.round(((price - discountPrice) / price) * 100);
-  }
-
-  private resolveProductImage(product: ISectionProducts): string {
-    if (product.mainImageUrl) {
-      return product.mainImageUrl;
-    }
-
-    if (product.images && product.images.length > 0) {
-      const mainImage = product.images.find((image) => image.isMain);
-      if (mainImage) {
-        return mainImage.imageUrl;
-      }
-
-      return product.images[0].imageUrl;
-    }
-
-    return DEFAULT_PRODUCT_IMAGE;
   }
 
   private resolveCategoryImage(imageUrl?: string): string {

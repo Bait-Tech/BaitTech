@@ -1,8 +1,19 @@
 .home-page {
   background: var(--client-bg);
   min-height: calc(100vh - 160px);
+  overflow-x: clip;
 }
 
 .home-content {
   padding-bottom: 3rem;
+}
+
+@media (max-width: 767.98px) {
+  .home-page {
+    min-height: calc(100vh - 120px);
+  }
+
+  .home-content {
+    padding-bottom: 2rem;
+  }
 }

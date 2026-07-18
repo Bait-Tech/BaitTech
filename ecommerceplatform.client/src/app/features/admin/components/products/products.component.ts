@@ -55,6 +55,7 @@ export class ProductsComponent implements OnInit {
   saveButtonLabel = signal('Create Product');
   saving = signal(false);
   visibleImageCount = signal(0);
+  imageUrlInput = signal('');
 
   deletePanelVisible = signal(false);
 
@@ -65,6 +66,8 @@ export class ProductsComponent implements OnInit {
   tableLoading = signal(false);
 
   totalRecords = signal(0);
+  tableFirst = signal(0);
+  readonly pageSize = 10;
 
   productForm: FormGroup;
 
@@ -92,7 +95,7 @@ export class ProductsComponent implements OnInit {
 
     this.loadCategories();
 
-    this.loadProducts({ first: 0, rows: 10 });
+    this.fetchProducts(0);
 
   }
 
@@ -116,7 +119,7 @@ export class ProductsComponent implements OnInit {
 
       discountPrice: [0, [Validators.min(0)]],
 
-      stockQuantity: [0, [Validators.required, Validators.min(0)]],
+      stockQuantity: [null, [Validators.min(0)]],
 
       images: this.fb.array([]),
 
@@ -154,34 +157,34 @@ export class ProductsComponent implements OnInit {
 
 
 
-  loadProducts(event?: any) {
+  loadProducts(event?: { first?: number | null }): void {
+    const first = event?.first ?? this.tableFirst();
+    this.fetchProducts(first);
+  }
 
+  private fetchProducts(first: number): void {
     if (!this.initialLoading()) {
-
       this.tableLoading.set(true);
-
     }
 
+    const normalizedFirst = this.normalizeFirst(first);
+    this.tableFirst.set(normalizedFirst);
 
-
-    const first = event?.first ?? 0;
-
-    const rows = event?.rows ?? 10;
-
-
-
-    this.productService.getPagedProducts(first, rows).subscribe({
-
+    this.productService.getPagedProducts(normalizedFirst, this.pageSize).subscribe({
       next: (response) => {
-
+        const totalCount = response.totalCount ?? 0;
         this.products.set(response.items ?? []);
+        this.totalRecords.set(totalCount);
 
-        this.totalRecords.set(response.totalCount ?? 0);
+        const adjustedFirst = this.resolveAdjustedFirst(totalCount);
+        if (adjustedFirst != null) {
+          this.tableFirst.set(adjustedFirst);
+          this.fetchProducts(adjustedFirst);
+          return;
+        }
 
         this.initialLoading.set(false);
-
         this.tableLoading.set(false);
-
       },
 
       error: () => {
@@ -255,6 +258,7 @@ export class ProductsComponent implements OnInit {
     this.submitted = false;
 
     this.visibleImageCount.set(0);
+    this.imageUrlInput.set('');
 
     this.panelTitle.set('New Product');
 
@@ -450,7 +454,7 @@ export class ProductsComponent implements OnInit {
 
           this.selectedProducts = [];
 
-          this.loadProducts();
+          this.reloadCurrentPage();
 
         },
 
@@ -495,6 +499,7 @@ export class ProductsComponent implements OnInit {
     this.imagesFormArray.clear();
 
     this.visibleImageCount.set(0);
+    this.imageUrlInput.set('');
 
   }
 
@@ -516,7 +521,7 @@ export class ProductsComponent implements OnInit {
 
     this.saving.set(true);
 
-    const productData = this.productForm.value;
+    const productData = this.normalizeProductForm(this.productForm.value);
 
 
 
@@ -540,7 +545,7 @@ export class ProductsComponent implements OnInit {
 
           this.saving.set(false);
 
-          this.loadProducts();
+          this.reloadCurrentPage();
 
           this.hidePanel();
 
@@ -586,7 +591,7 @@ export class ProductsComponent implements OnInit {
 
           this.saving.set(false);
 
-          this.loadProducts();
+          this.reloadFromFirstPage();
 
           this.hidePanel();
 
@@ -634,6 +639,30 @@ export class ProductsComponent implements OnInit {
 
     input.value = '';
 
+  }
+
+
+
+  onImageUrlInputChange(value: string): void {
+    this.imageUrlInput.set(value);
+  }
+
+  addImageFromUrl(): void {
+    const trimmedUrl = this.imageUrlInput().trim();
+
+    if (!trimmedUrl) {
+      return;
+    }
+
+    const newImage: IProductImage = {
+      imageUrl: trimmedUrl,
+      isMain: this.imagesFormArray.length === 0,
+      isDeleted: false,
+    };
+
+    this.imagesFormArray.push(this.createImageFormGroup(newImage));
+    this.imageUrlInput.set('');
+    this.updateVisibleImageCount();
   }
 
 
@@ -788,6 +817,45 @@ export class ProductsComponent implements OnInit {
 
     return labels[fieldName] ?? fieldName;
 
+  }
+
+  private normalizeProductForm(value: IProducts): IProducts {
+    const stockQuantity = value.stockQuantity;
+
+    return {
+      ...value,
+      stockQuantity:
+        stockQuantity === null || stockQuantity === undefined ? null : stockQuantity,
+    };
+  }
+
+  private reloadCurrentPage(): void {
+    this.fetchProducts(this.tableFirst());
+  }
+
+  private reloadFromFirstPage(): void {
+    this.fetchProducts(0);
+  }
+
+  private normalizeFirst(first: number): number {
+    if (!Number.isFinite(first) || first < 0) {
+      return 0;
+    }
+
+    return Math.floor(first);
+  }
+
+  private resolveAdjustedFirst(totalCount: number): number | null {
+    if (totalCount <= 0) {
+      return this.tableFirst() === 0 ? null : 0;
+    }
+
+    const maxFirst = Math.floor((totalCount - 1) / this.pageSize) * this.pageSize;
+    if (this.tableFirst() > maxFirst) {
+      return maxFirst;
+    }
+
+    return null;
   }
 
 }

@@ -35,16 +35,24 @@ import { CategoriesComponent } from './components/categories/categories.componen
 import { SubCategoriesComponent } from './components/sub-categories/sub-categories.component';
 import { ProductsComponent } from './components/products/products.component';
 import { ProductDetailsComponent } from './components/product-details/product-details.component';
+import { ProductImageZoomComponent } from './components/product-details/product-image-zoom/product-image-zoom.component';
 import { MessageService } from 'primeng/api';
 import { CartRedirectComponent } from './components/shopping-cart/cart-redirect.component';
 import { MainImagePipe } from './pipes/main-image.pipe';
-import { SharedModule as AppSharedModule } from '../../shared/shared.module';const routes: Routes = [
+import { SharedModule as AppSharedModule } from '../../shared/shared.module';
+import { heroSectionResolver } from './resolvers/hero-section.resolver';
+
+const routes: Routes = [
   {
     path: '',
     component: ClientLayoutComponent,
     children: [
       { path: '', redirectTo: 'home', pathMatch: 'full' },
-      { path: 'home', component: HomeComponent },
+      {
+        path: 'home',
+        component: HomeComponent,
+        resolve: { heroImages: heroSectionResolver },
+      },
       { path: 'categories', component: CategoriesComponent },
       { path: 'sub-categories', component: SubCategoriesComponent },
       { path: 'sub-categories/:id', component: SubCategoriesComponent },
@@ -88,9 +96,10 @@ import { SharedModule as AppSharedModule } from '../../shared/shared.module';con
     DynamicDialogModule,
     ColorChromeModule,
     AppSharedModule,
+    HeroSectionComponent,
+    ClientLayoutComponent,
   ],
   declarations: [
-    HeroSectionComponent,
     HomeComponent,
     CategoriesSectionComponent,
     ProductsSectionComponent,
@@ -98,6 +107,7 @@ import { SharedModule as AppSharedModule } from '../../shared/shared.module';con
     SubCategoriesComponent,
     ProductsComponent,
     ProductDetailsComponent,
+    ProductImageZoomComponent,
     CartRedirectComponent,
     MainImagePipe
   ],

@@ -22,7 +22,7 @@
               <i class="pi pi-spin pi-spinner"></i>
             </div>
           }
-          <p-table #dt [value]="subCategories()" [rows]="10" [paginator]="true" [globalFilterFields]="['englishName']"
+          <p-table #dt [value]="subCategories()" [rows]="pageSize" [first]="tableFirst()" [paginator]="true" [globalFilterFields]="['englishName']"
             [(selection)]="selectedSubCategories" selectionMode="multiple" [rowHover]="true" dataKey="id"
             [lazy]="true" [totalRecords]="totalRecords()" (onLazyLoad)="loadSubCategories($event)"
             currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries" [showCurrentPageReport]="true">
@@ -123,7 +123,7 @@
             </span>
             <div class="form-section-heading">
               <h3 class="form-section-title">Sub Category Image</h3>
-              <p class="form-section-desc">Upload a display image</p>
+              <p class="form-section-desc">Upload a file or paste an image URL</p>
             </div>
           </div>
 
@@ -141,6 +141,18 @@
               <span class="image-upload-title">Click to upload image</span>
               <span class="image-upload-hint">PNG or JPG, max 1MB</span>
             </button>
+
+            <span class="image-url-divider">Or paste image URL</span>
+
+            <div class="image-url-row">
+              <input
+                type="url"
+                pInputText
+                formControlName="imageUrl"
+                placeholder="https://example.com/image.jpg"
+                class="form-control-full" />
+            </div>
+
             @if (imagePreview()) {
               <div class="image-preview-card">
                 <img [src]="imagePreview()" alt="Sub category preview" />

@@ -10,7 +10,7 @@
         public int? SubCategoryID { get; set; }
         public decimal Price { get; set; }
         public decimal? DiscountPrice { get; set; }
-        public int StockQuantity { get; set; }
+        public int? StockQuantity { get; set; }
         public List<ProductImageDTO> Images { get; set; } = [];
     }
 }

@@ -1,0 +1,30 @@
+@if (hasContactChannels()) {
+  <aside class="contact-widget" [class.open]="isOpen()">
+    <div class="contact-widget-panel">
+      @for (channel of contactChannels(); track channel.id) {
+        <a
+          [href]="channel.href"
+          class="contact-widget-link"
+          [class.facebook]="channel.id === 'facebook'"
+          [class.instagram]="channel.id === 'instagram'"
+          [class.snapchat]="channel.id === 'snapchat'"
+          [class.phone]="channel.id === 'phone'"
+          [attr.target]="channel.external ? '_blank' : null"
+          [attr.rel]="channel.external ? 'noopener noreferrer' : null"
+          [attr.aria-label]="channel.label"
+          (click)="closeWidget()">
+          <i [class]="channel.iconClass"></i>
+        </a>
+      }
+    </div>
+
+    <button
+      type="button"
+      class="contact-widget-trigger"
+      aria-label="Contact options"
+      [attr.aria-expanded]="isOpen()"
+      (click)="toggleWidget($event)">
+      <i class="bi bi-chat-dots-fill"></i>
+    </button>
+  </aside>
+}

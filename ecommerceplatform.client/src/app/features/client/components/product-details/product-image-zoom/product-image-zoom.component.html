@@ -1,0 +1,84 @@
+<div class="zoom-overlay" (click)="onBackdropClick()">
+  <div class="zoom-shell" (click)="stopPropagation($event)">
+    <div class="zoom-toolbar">
+      <div class="zoom-toolbar-start">
+        @if (imageCounter()) {
+          <span class="zoom-counter">{{ imageCounter() }}</span>
+        }
+        <span class="zoom-level">{{ zoomPercentLabel() }}</span>
+      </div>
+
+      <div class="zoom-toolbar-actions">
+        <button
+          type="button"
+          class="zoom-tool-btn"
+          aria-label="Zoom out"
+          [disabled]="!canZoomOut()"
+          (click)="zoomOut()">
+          <i class="bi bi-dash-lg"></i>
+        </button>
+        <button
+          type="button"
+          class="zoom-tool-btn"
+          aria-label="Reset zoom"
+          (click)="resetZoom()">
+          <i class="bi bi-aspect-ratio"></i>
+        </button>
+        <button
+          type="button"
+          class="zoom-tool-btn"
+          aria-label="Zoom in"
+          [disabled]="!canZoomIn()"
+          (click)="zoomIn()">
+          <i class="bi bi-plus-lg"></i>
+        </button>
+        <button type="button" class="zoom-close-btn" aria-label="Close zoom" (click)="close()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="zoom-stage">
+      @if (showNavigation()) {
+        <button
+          type="button"
+          class="zoom-nav-btn zoom-nav-prev"
+          aria-label="Previous image"
+          [disabled]="!hasPrevious()"
+          (click)="showPrevious()">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+      }
+
+      <div
+        class="zoom-viewport"
+        [ngClass]="viewportClass()"
+        (wheel)="onWheel($event)"
+        (pointerdown)="onPointerDown($event)"
+        (pointermove)="onPointerMove($event)"
+        (pointerup)="onPointerUp()"
+        (pointerleave)="onPointerUp()"
+        (dblclick)="toggleZoom()">
+        <img
+          [src]="currentImageUrl()"
+          [alt]="productName()"
+          class="zoom-image"
+          [style.transform]="imageTransform()"
+          draggable="false" />
+      </div>
+
+      @if (showNavigation()) {
+        <button
+          type="button"
+          class="zoom-nav-btn zoom-nav-next"
+          aria-label="Next image"
+          [disabled]="!hasNext()"
+          (click)="showNext()">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      }
+    </div>
+
+    <p class="zoom-hint">Scroll to zoom · Double-click to toggle · Drag when zoomed</p>
+  </div>
+</div>

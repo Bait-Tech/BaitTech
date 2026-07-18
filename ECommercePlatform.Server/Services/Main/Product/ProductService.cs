@@ -217,7 +217,11 @@ namespace ECommercePlatform.Server.Services.Main.Product
                     for (int i = 0; i < productDto.Images.Count; i++)
                     {
                         var imageDto = productDto.Images[i];
-                        string imagePath = await _imageHelper.AddImage(imageDto.ImageFile, "products");
+                        string? imagePath = await ResolveImageUrlAsync(imageDto.ImageFile, imageDto.ImageUrl, "products");
+                        if (string.IsNullOrWhiteSpace(imagePath))
+                        {
+                            continue;
+                        }
                         var productImage = new ProductImage
                         {
                             ProductID = product.ID,
@@ -280,9 +284,13 @@ namespace ECommercePlatform.Server.Services.Main.Product
                             }
                         }
                     }
-                    else if (imageDto.ImageFile != null)
+                    else if (imageDto.ImageFile != null || !string.IsNullOrWhiteSpace(imageDto.ImageUrl))
                     {
-                        string imagePath = await _imageHelper.AddImage(imageDto.ImageFile, "products");
+                        string? imagePath = await ResolveImageUrlAsync(imageDto.ImageFile, imageDto.ImageUrl, "products");
+                        if (string.IsNullOrWhiteSpace(imagePath))
+                        {
+                            continue;
+                        }
                         var newImage = new ProductImage
                         {
                             ProductID = product.ID,
@@ -387,6 +395,21 @@ namespace ECommercePlatform.Server.Services.Main.Product
             }
 
             _context.ProductImages.RemoveRange(images);
+        }
+
+        private async Task<string?> ResolveImageUrlAsync(IFormFile? imageFile, string? imageUrl, string folderName)
+        {
+            if (imageFile != null)
+            {
+                return await _imageHelper.AddImage(imageFile, folderName);
+            }
+
+            if (!string.IsNullOrWhiteSpace(imageUrl) && !imageUrl.StartsWith("blob:", StringComparison.OrdinalIgnoreCase))
+            {
+                return imageUrl.Trim();
+            }
+
+            return null;
         }
     }
 }

@@ -12,6 +12,7 @@ namespace ECommercePlatform.Server.Entities.HomeSections
 
         public bool IsMain { get; set; }
         public string ImageUrl { get; set; } = string.Empty;
+        public string VideoUrl { get; set; } = string.Empty;
         public string LinkUrl { get; set; } = string.Empty;
     }
 }

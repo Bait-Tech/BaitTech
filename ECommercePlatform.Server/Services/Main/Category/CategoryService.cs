@@ -44,10 +44,7 @@ namespace ECommercePlatform.Server.Services.Main.Category
 
 
 
-                if (categoryDto.ImageFile != null)
-                {
-                    category.ImageUrl = await _imageHelper.AddImage(categoryDto.ImageFile, "categories");
-                }
+                category.ImageUrl = await ResolveImageUrlAsync(categoryDto.ImageFile, categoryDto.ImageUrl, "categories");
 
                 await _context.Categories.AddAsync(category);
 
@@ -78,13 +75,13 @@ namespace ECommercePlatform.Server.Services.Main.Category
 
                 category.EnglishName = categoryDto.Name;
 
-                if (categoryDto.ImageFile != null)
+                if (categoryDto.ImageFile != null || !string.IsNullOrWhiteSpace(categoryDto.ImageUrl))
                 {
-                    if (!string.IsNullOrEmpty(category.ImageUrl))
+                    if (categoryDto.ImageFile != null && !string.IsNullOrEmpty(category.ImageUrl))
                     {
                         await _imageHelper.DeleteImage(category.ImageUrl);
                     }
-                    category.ImageUrl = await _imageHelper.AddImage(categoryDto.ImageFile, "categories");
+                    category.ImageUrl = await ResolveImageUrlAsync(categoryDto.ImageFile, categoryDto.ImageUrl, "categories");
                 }
 
                 await _context.SaveChangesAsync();
@@ -115,6 +112,21 @@ namespace ECommercePlatform.Server.Services.Main.Category
             _context.RemoveRange(categories);
 
             return await _context.SaveChangesAsync() > 0;
+        }
+
+        private async Task<string?> ResolveImageUrlAsync(IFormFile? imageFile, string? imageUrl, string folderName)
+        {
+            if (imageFile != null)
+            {
+                return await _imageHelper.AddImage(imageFile, folderName);
+            }
+
+            if (!string.IsNullOrWhiteSpace(imageUrl))
+            {
+                return imageUrl.Trim();
+            }
+
+            return null;
         }
     }
 }

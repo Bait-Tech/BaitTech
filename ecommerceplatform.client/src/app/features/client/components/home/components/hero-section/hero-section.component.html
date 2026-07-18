@@ -1,18 +1,74 @@
 @if (hasHeroImages()) {
   <section class="hero-section">
     <div class="hero-carousel-container">
-      <div id="homeHeroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
+      <div id="homeHeroCarousel" class="carousel slide carousel-fade">
         <div class="carousel-inner">
-          @for (image of heroImages(); track image.id; let i = $index) {
+          @for (image of heroImages(); track $index; let i = $index) {
             <div class="carousel-item" [class.active]="i === initialActiveIndex()">
               <div class="carousel-image-container">
-                @if (image.linkUrl) {
-                  <a [href]="image.linkUrl" class="carousel-link">
-                    <img [src]="image.imageUrl" class="carousel-img" alt="Hero banner">
-                  </a>
+                @if (image.videoUrl) {
+                  @if (image.isYoutubeVideo) {
+                    <img
+                      [src]="image.videoThumbnailUrl"
+                      class="carousel-img carousel-youtube-poster"
+                      alt="Hero banner"
+                      [attr.loading]="lcpSlideFlags()[i] ? 'eager' : 'lazy'"
+                      [attr.fetchpriority]="lcpSlideFlags()[i] ? 'high' : 'auto'">
+                    <div class="hero-video-cover">
+                      <iframe
+                        [src]="image.safeVideoEmbedUrl"
+                        title="Hero banner video"
+                        class="carousel-video carousel-iframe"
+                        allow="autoplay; encrypted-media; picture-in-picture"
+                        referrerpolicy="strict-origin-when-cross-origin"
+                        allowfullscreen>
+                      </iframe>
+                    </div>
+                  }
+                  @if (!image.isYoutubeVideo) {
+                    @if (image.linkUrl) {
+                      <a [href]="image.linkUrl" class="carousel-link">
+                        <video
+                          [src]="image.videoUrl"
+                          class="carousel-video"
+                          muted
+                          loop
+                          playsinline
+                          preload="metadata">
+                        </video>
+                      </a>
+                    }
+                    @if (!image.linkUrl) {
+                      <video
+                        [src]="image.videoUrl"
+                        class="carousel-video"
+                        muted
+                        loop
+                        playsinline
+                        preload="metadata">
+                      </video>
+                    }
+                  }
                 }
-                @if (!image.linkUrl) {
-                  <img [src]="image.imageUrl" class="carousel-img" alt="Hero banner">
+                @if (!image.videoUrl) {
+                  @if (image.linkUrl) {
+                    <a [href]="image.linkUrl" class="carousel-link">
+                      <img
+                        [src]="image.imageUrl"
+                        class="carousel-img"
+                        alt="Hero banner"
+                        [attr.loading]="lcpSlideFlags()[i] ? 'eager' : 'lazy'"
+                        [attr.fetchpriority]="lcpSlideFlags()[i] ? 'high' : 'auto'">
+                    </a>
+                  }
+                  @if (!image.linkUrl) {
+                    <img
+                      [src]="image.imageUrl"
+                      class="carousel-img"
+                      alt="Hero banner"
+                      [attr.loading]="lcpSlideFlags()[i] ? 'eager' : 'lazy'"
+                      [attr.fetchpriority]="lcpSlideFlags()[i] ? 'high' : 'auto'">
+                  }
                 }
               </div>
             </div>
@@ -21,13 +77,13 @@
 
         @if (heroImages().length > 1) {
           <div class="carousel-indicators custom-indicators">
-            @for (image of heroImages(); track image.id; let i = $index) {
+            @for (image of heroImages(); track $index; let i = $index) {
               <button
                 type="button"
                 data-bs-target="#homeHeroCarousel"
                 [attr.data-bs-slide-to]="i"
-                [class.active]="i === initialActiveIndex()"
-                [attr.aria-current]="i === initialActiveIndex() ? 'true' : null"
+                [class.active]="i === activeSlideIndex()"
+                [attr.aria-current]="i === activeSlideIndex() ? 'true' : null"
                 [attr.aria-label]="'Slide ' + (i + 1)">
               </button>
             }

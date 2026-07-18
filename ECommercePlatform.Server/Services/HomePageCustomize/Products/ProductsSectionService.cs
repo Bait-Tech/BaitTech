@@ -2,6 +2,7 @@
 using ECommercePlatform.Server.DTOs.HomePageSections;
 using ECommercePlatform.Server.DTOs.Product;
 using ECommercePlatform.Server.Entities.HomeSections;
+using ECommercePlatform.Server.Entities.Main;
 using ECommercePlatform.Server.Helpers.ImageHelper;
 using Microsoft.EntityFrameworkCore;
 
@@ -45,12 +46,8 @@ namespace ECommercePlatform.Server.Services.HomePageCustomize.Products
                     Price = sp.Product.Price,
                     DiscountPrice = sp.Product.Discount1Price,
                     StockQuantity = sp.Product.StockQuantity,
-                    Images = sp.Product.ProductImages?.Where(pi=>pi.IsMain).Select(pi => new ProductImageDTO
-                    {
-                        ID = pi.ID,
-                        ImageUrl = pi.ImageUrl,
-                    }).ToList()
-                }).ToList()
+                    Images = MapCardImages(sp.Product.ProductImages)
+                }).ToList() ?? []
             }).ToList();
 
         }
@@ -153,6 +150,80 @@ namespace ECommercePlatform.Server.Services.HomePageCustomize.Products
             _DBContext.Remove(section);
 
             return await _DBContext.SaveChangesAsync() > 0;
+        }
+
+        private static List<ProductImageDTO> MapCardImages(ICollection<ProductImage>? productImages)
+        {
+            if (productImages == null || productImages.Count == 0)
+            {
+                return [];
+            }
+
+            var mainImage = ResolveMainImage(productImages);
+            var hoverImage = ResolveHoverImage(productImages, mainImage);
+            var images = new List<ProductImageDTO>();
+
+            if (mainImage != null)
+            {
+                images.Add(new ProductImageDTO
+                {
+                    ID = mainImage.ID,
+                    ImageUrl = mainImage.ImageUrl,
+                    IsMain = true,
+                });
+            }
+
+            if (hoverImage != null)
+            {
+                images.Add(new ProductImageDTO
+                {
+                    ID = hoverImage.ID,
+                    ImageUrl = hoverImage.ImageUrl,
+                    IsMain = false,
+                });
+            }
+
+            return images;
+        }
+
+        private static ProductImage? ResolveMainImage(ICollection<ProductImage> productImages)
+        {
+            ProductImage? fallback = null;
+
+            foreach (var image in productImages)
+            {
+                if (fallback == null)
+                {
+                    fallback = image;
+                }
+
+                if (image.IsMain)
+                {
+                    return image;
+                }
+            }
+
+            return fallback;
+        }
+
+        private static ProductImage? ResolveHoverImage(
+            ICollection<ProductImage> productImages,
+            ProductImage? mainImage)
+        {
+            if (mainImage == null)
+            {
+                return null;
+            }
+
+            foreach (var image in productImages)
+            {
+                if (image.ID != mainImage.ID)
+                {
+                    return image;
+                }
+            }
+
+            return null;
         }
     }
 }

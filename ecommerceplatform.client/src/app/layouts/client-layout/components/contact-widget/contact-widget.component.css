@@ -1,0 +1,147 @@
+:host {
+  display: block;
+}
+
+.contact-widget {
+  position: fixed;
+  right: 1.15rem;
+  bottom: 1.25rem;
+  z-index: 1050;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.7rem;
+}
+
+.contact-widget-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(16px) scale(0.92);
+  transform-origin: bottom center;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s ease;
+}
+
+.contact-widget:hover .contact-widget-panel,
+.contact-widget.open .contact-widget-panel {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.contact-widget-trigger,
+.contact-widget-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.35rem;
+  height: 3.35rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.contact-widget-trigger {
+  flex-shrink: 0;
+  border: none;
+  background: var(--client-accent, #00d7c3);
+  color: #0c0c0c;
+  font-size: 1.35rem;
+  cursor: pointer;
+}
+
+.contact-widget-trigger:hover {
+  background: var(--client-accent-hover, #00b8a8);
+  transform: scale(1.05);
+  box-shadow: 0 12px 32px rgba(0, 215, 195, 0.35);
+}
+
+.contact-widget.open .contact-widget-trigger {
+  transform: scale(1.05);
+}
+
+.contact-widget-link {
+  background: rgba(12, 12, 12, 0.92);
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 1.15rem;
+  backdrop-filter: blur(8px);
+}
+
+.contact-widget-link:hover {
+  transform: scale(1.08);
+  color: #ffffff;
+}
+
+.contact-widget-link.facebook:hover {
+  background: #1877f2;
+  border-color: #1877f2;
+}
+
+.contact-widget-link.instagram:hover {
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  border-color: transparent;
+}
+
+.contact-widget-link.snapchat:hover {
+  background: #fffc00;
+  border-color: #fffc00;
+  color: #0c0c0c;
+}
+
+.contact-widget-link.phone:hover {
+  background: var(--client-accent, #00d7c3);
+  border-color: var(--client-accent, #00d7c3);
+  color: #0c0c0c;
+}
+
+@media (max-width: 991.98px) {
+  .contact-widget {
+    right: 0.85rem;
+    bottom: 1rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .contact-widget {
+    right: max(0.65rem, env(safe-area-inset-right));
+    bottom: max(0.85rem, env(safe-area-inset-bottom));
+  }
+
+  .contact-widget-trigger,
+  .contact-widget-link {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .contact-widget-trigger {
+    font-size: 1.2rem;
+  }
+
+  .contact-widget-link {
+    font-size: 1.05rem;
+  }
+}
+
+@media (hover: none) {
+  .contact-widget:hover .contact-widget-panel {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(16px) scale(0.92);
+    pointer-events: none;
+  }
+
+  .contact-widget.open .contact-widget-panel {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+}

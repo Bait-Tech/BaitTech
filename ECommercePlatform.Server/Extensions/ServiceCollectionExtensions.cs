@@ -1,6 +1,7 @@
 ﻿using ECommercePlatform.Server.Helpers.ImageHelper;
 using ECommercePlatform.Server.Services.Cashe;
 using StackExchange.Redis;
+using ECommercePlatform.Server.Services.HomePageCustomize.BackgroundVideo;
 using ECommercePlatform.Server.Services.HomePageCustomize.Hero;
 using ECommercePlatform.Server.Services.HomePageCustomize.Products;
 using ECommercePlatform.Server.Services.Identity;
@@ -31,6 +32,7 @@ namespace ECommercePlatform.Server.Extensions
             services.AddScoped<ISubCategoryService, SubCategoryService>();
             services.AddScoped<ImageHelperService>();
             services.AddScoped<IHeroSectionService, HeroSectionService>();
+            services.AddScoped<IBackgroundVideoSectionService, BackgroundVideoSectionService>();
             services.AddScoped<IProductsSectionService, ProductsSectionService>();
             RegisterCacheService(services, configuration);
             services.AddScoped<IOrdersService, OrdersService>();

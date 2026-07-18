@@ -23,3 +23,25 @@
     background: var(--client-bg);
   }
 }
+
+.layout-wrapper.layout-static.layout-has-background-video {
+  background: transparent;
+
+  .content-wrapper,
+  .home-page,
+  .products-page,
+  .categories-page,
+  .sub-categories-page,
+  .product-details-page,
+  .hero-section {
+    background: transparent;
+  }
+
+  .page-header {
+    background: linear-gradient(
+      180deg,
+      rgba(20, 20, 20, 0.82) 0%,
+      rgba(12, 12, 12, 0.55) 100%
+    );
+  }
+}

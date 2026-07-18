@@ -101,7 +101,7 @@ const routes: Routes = [
     SubCategoriesComponent,
     HomePageCustomizeComponent,
     HeroSectionComponent,
-    ProductsSectionComponent, 
+    ProductsSectionComponent,
     ProductsSectionPopupComponent,
     PendingOrdersComponent,
     ConfirmedOrdersComponent,

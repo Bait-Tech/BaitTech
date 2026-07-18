@@ -49,6 +49,54 @@
   object-position: center;
 }
 
+.hero-carousel-container .carousel-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  background: var(--client-surface);
+}
+
+.hero-carousel-container .carousel-iframe {
+  border: 0;
+}
+
+.hero-carousel-container .carousel-youtube-poster {
+  display: block;
+}
+
+.hero-carousel-container .carousel-item.active .carousel-youtube-poster {
+  display: none;
+}
+
+.hero-carousel-container .carousel-item .hero-video-cover {
+  display: none;
+}
+
+.hero-carousel-container .carousel-item.active .hero-video-cover {
+  display: block;
+}
+
+.hero-video-cover {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--client-surface);
+}
+
+.hero-video-cover .carousel-iframe {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300%;
+  height: 300%;
+  max-width: none;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
 .hero-carousel-container .custom-indicators {
   position: absolute;
   bottom: 18px;
@@ -133,6 +181,10 @@
 }
 
 @media (max-width: 767.98px) {
+  .hero-section {
+    padding: 0.85rem 0 0.35rem;
+  }
+
   .hero-carousel-container {
     padding: 0 0.75rem;
   }
@@ -145,9 +197,42 @@
     aspect-ratio: 16 / 10;
   }
 
+  .hero-carousel-container .custom-indicators {
+    bottom: 12px;
+    gap: 6px;
+  }
+
+  .hero-carousel-container .custom-indicators button {
+    width: 8px;
+    height: 8px;
+  }
+
+  .hero-carousel-container .custom-indicators button.active {
+    width: 22px;
+  }
+
   .hero-carousel-container .carousel-nav-btn {
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
+    font-size: 1rem;
     opacity: 1;
+  }
+
+  .hero-carousel-container .carousel-nav-btn.carousel-control-prev {
+    left: 10px;
+  }
+
+  .hero-carousel-container .carousel-nav-btn.carousel-control-next {
+    right: 10px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .hero-carousel-container {
+    padding: 0 0.65rem;
+  }
+
+  .hero-carousel-container .carousel-inner {
+    aspect-ratio: 4 / 3;
   }
 }

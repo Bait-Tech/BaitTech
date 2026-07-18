@@ -9,6 +9,6 @@ export interface IProducts {
     subCategoryID?: number;
     price: number;
     discountPrice?: number;
-    stockQuantity: number;
+    stockQuantity?: number | null;
     images: IProductImage[];
 }

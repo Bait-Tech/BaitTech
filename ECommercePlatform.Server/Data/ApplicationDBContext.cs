@@ -26,5 +26,6 @@ namespace ECommercePlatform.Server.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<ProductsOrders> ProductsOrders { get; set; }
         public DbSet<CompanySettings> CompanySettings { get; set; }
+        public DbSet<BackgroundVideoSection> BackgroundVideoSections { get; set; }
     }
 }

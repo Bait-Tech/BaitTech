@@ -31,9 +31,11 @@ export class ProductService {
     first: number,
     rows: number
   ): Observable<PaginatedResult<IProducts>> {
+    const pageSize = rows > 0 ? rows : 10;
+    const pageNumber = Math.floor(first / pageSize) + 1;
     const params = new HttpParams()
-      .set('pageNumber', (first / rows + 1).toString())
-      .set('pageSize', rows.toString());
+      .set('pageNumber', pageNumber.toString())
+      .set('pageSize', pageSize.toString());
 
     return this.http
       .get<unknown>(`${this.apiUrl}/Paged/Products`, { params })
@@ -117,7 +119,7 @@ export class ProductService {
       subCategoryID: this.readOptionalNumber(source, 'subCategoryID', 'SubCategoryID'),
       price: this.readNumber(source, 'price', 'Price'),
       discountPrice: this.readOptionalNumber(source, 'discountPrice', 'DiscountPrice'),
-      stockQuantity: this.readNumber(source, 'stockQuantity', 'StockQuantity'),
+      stockQuantity: this.readNullableNumber(source, 'stockQuantity', 'StockQuantity'),
       images,
     };
   }
@@ -186,6 +188,20 @@ export class ProductService {
     return typeof value === 'number' ? value : undefined;
   }
 
+  private readNullableNumber(
+    source: Record<string, unknown>,
+    camelKey: string,
+    pascalKey: string
+  ): number | null | undefined {
+    const value = source[camelKey] ?? source[pascalKey];
+
+    if (value === null) {
+      return null;
+    }
+
+    return typeof value === 'number' ? value : undefined;
+  }
+
   private createFormData(product: IProducts): FormData {
     const formData = new FormData();
 
@@ -198,7 +214,9 @@ export class ProductService {
     formData.append('code', product.code);
     formData.append('categoryID', product.categoryID.toString());
     formData.append('price', product.price.toString());
-    formData.append('stockQuantity', product.stockQuantity.toString());
+    if (product.stockQuantity != null) {
+      formData.append('stockQuantity', product.stockQuantity.toString());
+    }
 
     if (product.subCategoryID) {
       formData.append('subCategoryID', product.subCategoryID.toString());
@@ -210,6 +228,8 @@ export class ProductService {
     product.images.forEach((image, index) => {
       if (image.imageFile) {
         formData.append(`Images[${index}].ImageFile`, image.imageFile);
+      } else if (image.imageUrl && !image.imageUrl.startsWith('blob:')) {
+        formData.append(`Images[${index}].ImageUrl`, image.imageUrl);
       }
       formData.append(`Images[${index}].IsMain`, image.isMain.toString());
       formData.append(`Images[${index}].IsDeleted`, image.isDeleted.toString());

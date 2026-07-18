@@ -7,6 +7,11 @@ import { ICartState } from '../../interfaces/cart-interface';
 import { IProductDetailsView } from '../../interfaces/product-details-view.interface';
 import { IProducts } from '../../../admin/interfaces/products.interface';
 import { IProductImage } from '../../../admin/interfaces/product-image.interface';
+import {
+  isProductLowStock,
+  isProductOutOfStock,
+  tracksProductStock,
+} from '../../../../shared/utils/product-stock.util';
 import { Subject, takeUntil } from 'rxjs';
 
 const DEFAULT_PRODUCT_IMAGE = '/assets/images/seed/tech-1.jpg';
@@ -23,6 +28,7 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
   loadError = signal(false);
   quantity = signal(1);
   selectedImageIndex = signal(0);
+  imageZoomVisible = signal(false);
 
   mainImageUrl = computed(() => {
     const view = this.productView();
@@ -42,12 +48,24 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
 
   canIncrement = computed(() => {
     const view = this.productView();
-    return !!view && !view.outOfStock && this.quantity() < view.stockQuantity;
+    if (!view || view.outOfStock) {
+      return false;
+    }
+
+    if (!view.tracksStock) {
+      return true;
+    }
+
+    return this.quantity() < view.stockQuantity!;
   });
 
   quantityMax = computed(() => {
     const view = this.productView();
-    return view?.stockQuantity ?? 1;
+    if (!view?.tracksStock) {
+      return null;
+    }
+
+    return view.stockQuantity ?? 1;
   });
 
   lineTotal = computed(() => {
@@ -96,6 +114,14 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     this.selectedImageIndex.set(index);
   }
 
+  openImageZoom() {
+    this.imageZoomVisible.set(true);
+  }
+
+  closeImageZoom() {
+    this.imageZoomVisible.set(false);
+  }
+
   decrementQuantity() {
     if (!this.canDecrement()) {
       return;
@@ -111,8 +137,8 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (this.quantity() >= view.stockQuantity) {
-      this.showMaxQuantityMessage(view.stockQuantity);
+    if (view.tracksStock && this.quantity() >= view.stockQuantity!) {
+      this.showMaxQuantityMessage(view.stockQuantity!);
       return;
     }
 
@@ -134,10 +160,10 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (value > view.stockQuantity) {
-      this.quantity.set(view.stockQuantity);
-      input.value = view.stockQuantity.toString();
-      this.showMaxQuantityMessage(view.stockQuantity);
+    if (value > view.stockQuantity! && view.tracksStock) {
+      this.quantity.set(view.stockQuantity!);
+      input.value = view.stockQuantity!.toString();
+      this.showMaxQuantityMessage(view.stockQuantity!);
       return;
     }
 
@@ -217,6 +243,7 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     const displayPrice = hasDiscount ? product.discountPrice! : product.price;
     const savingsAmount = hasDiscount ? product.price - product.discountPrice! : 0;
     const stockQuantity = product.stockQuantity;
+    const tracksStock = tracksProductStock(stockQuantity);
 
     return {
       product,
@@ -228,9 +255,10 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
         ? this.calculateDiscountPercent(product.price, product.discountPrice!)
         : 0,
       savingsAmount,
-      outOfStock: stockQuantity === 0,
+      outOfStock: isProductOutOfStock(stockQuantity),
+      tracksStock,
       stockQuantity,
-      lowStock: stockQuantity > 0 && stockQuantity <= 5,
+      lowStock: isProductLowStock(stockQuantity),
     };
   }
 

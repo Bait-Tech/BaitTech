@@ -22,6 +22,32 @@ namespace ECommercePlatform.Server.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("ECommercePlatform.Server.Entities.HomeSections.BackgroundVideoSection", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("VideoUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ID");
+
+                    b.ToTable("BackgroundVideoSections");
+                });
+
             modelBuilder.Entity("ECommercePlatform.Server.Entities.HomeSections.GalleryImage", b =>
                 {
                     b.Property<int>("ID")
@@ -65,6 +91,10 @@ namespace ECommercePlatform.Server.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("LinkUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VideoUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -340,7 +370,7 @@ namespace ECommercePlatform.Server.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("StockQuantity")
+                    b.Property<int?>("StockQuantity")
                         .HasColumnType("int");
 
                     b.Property<int?>("SubCategoryID")

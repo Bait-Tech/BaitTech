@@ -10,7 +10,11 @@
         @for (category of categories(); track category.id) {
           <button type="button" class="category-card" (click)="onCategoryClick(category.id)">
             <div class="category-image-wrap">
-              <img [src]="category.imageUrl" [alt]="category.name" class="category-image">
+              <img
+                [src]="category.imageUrl"
+                [alt]="category.name"
+                class="category-image"
+                loading="lazy">
             </div>
             <span class="category-name">{{ category.name }}</span>
           </button>

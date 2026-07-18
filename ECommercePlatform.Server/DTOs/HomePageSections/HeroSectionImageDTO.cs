@@ -4,8 +4,9 @@
     {
         public int ID { get; set; }
         public bool IsMain { get; set; }
-        public string ImageUrl { get; set; } = string.Empty;
-        public string LinkUrl { get; set; } = string.Empty;
+        public string? ImageUrl { get; set; }
+        public string? VideoUrl { get; set; }
+        public string? LinkUrl { get; set; }
         public IFormFile? ImageFile { get; set; }
     }
 }

@@ -107,6 +107,8 @@ export class CategoryService {
 
     if (category.imageFile) {
       formData.append('imageFile', category.imageFile);
+    } else if (category.imageUrl) {
+      formData.append('imageUrl', category.imageUrl);
     }
 
     return formData;

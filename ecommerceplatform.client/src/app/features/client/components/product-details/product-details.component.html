@@ -38,6 +38,13 @@
         <section class="gallery-panel">
           <div class="main-image-wrap">
             <img [src]="mainImageUrl()" [alt]="view.product.name" class="main-image">
+            <button
+              type="button"
+              class="zoom-open-btn"
+              aria-label="Zoom image"
+              (click)="openImageZoom()">
+              <i class="bi bi-zoom-in"></i>
+            </button>
             @if (view.hasDiscount) {
               <span class="discount-badge">-{{ view.discountPercent }}%</span>
             }
@@ -58,6 +65,15 @@
           }
         </section>
 
+        @if (imageZoomVisible()) {
+          <app-product-image-zoom
+            [images]="view.images"
+            [startIndex]="selectedImageIndex()"
+            [productName]="view.product.name"
+            (closed)="closeImageZoom()">
+          </app-product-image-zoom>
+        }
+
         <section class="info-panel">
           <div class="info-card">
             <div class="info-header">
@@ -65,10 +81,10 @@
                 @if (view.hasDiscount) {
                   <span class="info-badge discount">Save {{ view.discountPercent }}%</span>
                 }
-                @if (view.lowStock) {
+                @if (view.tracksStock && view.lowStock) {
                   <span class="info-badge warning">Low Stock</span>
                 }
-                @if (view.outOfStock) {
+                @if (view.tracksStock && view.outOfStock) {
                   <span class="info-badge danger">Sold Out</span>
                 }
               </div>
@@ -129,7 +145,7 @@
                     class="quantity-input"
                     [value]="quantity()"
                     [disabled]="view.outOfStock"
-                    [max]="quantityMax()"
+                    [attr.max]="quantityMax()"
                     min="1"
                     (change)="onQuantityInput($event)" />
                   <button
@@ -157,14 +173,14 @@
                 </button>
               </div>
 
-              @if (!view.outOfStock) {
+              @if (view.tracksStock && !view.outOfStock) {
                 <p class="stock-status in-stock">
                   <i class="bi bi-check-circle-fill"></i>
                   In Stock — {{ view.stockQuantity }} available
                 </p>
               }
 
-              @if (view.outOfStock) {
+              @if (view.tracksStock && view.outOfStock) {
                 <p class="stock-status out-of-stock">
                   <i class="bi bi-x-circle-fill"></i>
                   Out of Stock

@@ -52,7 +52,12 @@
         @for (product of productCards(); track product.id) {
           <article class="product-card" (click)="goToProductPage(product.id)">
             <div class="product-image-wrap">
-              <img [src]="product.mainImageUrl" [alt]="product.name" class="product-image">
+              <div class="product-image-stack" [class.has-hover-image]="product.hasHoverImage">
+                <img [src]="product.mainImageUrl" [alt]="product.name" class="product-image product-image-main">
+                @if (product.hasHoverImage) {
+                  <img [src]="product.hoverImageUrl" [alt]="product.name" class="product-image product-image-hover">
+                }
+              </div>
               @if (product.hasDiscount) {
                 <span class="product-discount-badge">-{{ product.discountPercent }}%</span>
               }

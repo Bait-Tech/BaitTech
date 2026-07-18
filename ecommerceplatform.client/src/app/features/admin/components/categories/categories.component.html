@@ -17,8 +17,9 @@
           <i class="pi pi-spin pi-spinner"></i>
         </div>
       } @else {
-        <p-table #dt [value]="categories()" [rows]="10" [paginator]="true" [globalFilterFields]="['name']"
+        <p-table #dt [value]="categories()" [rows]="pageSize" [first]="tableFirst()" [paginator]="true" [globalFilterFields]="['name']"
           [(selection)]="selectedCategories" selectionMode="multiple" [rowHover]="true" dataKey="id"
+          (onPage)="onTablePage($event)"
           currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries" [showCurrentPageReport]="true">
         <ng-template pTemplate="header">
           <tr>
@@ -99,9 +100,22 @@
                 <span class="image-upload-title">Click to upload image</span>
                 <span class="image-upload-hint">PNG or JPG, max 1MB</span>
               </button>
-              @if (category.imageUrl) {
+
+              <span class="image-url-divider">Or paste image URL</span>
+
+              <div class="image-url-row">
+                <input
+                  type="url"
+                  pInputText
+                  [ngModel]="category.imageUrl"
+                  (ngModelChange)="onImageUrlInput($event)"
+                  placeholder="https://example.com/image.jpg"
+                  class="form-control-full" />
+              </div>
+
+              @if (imagePreview()) {
                 <div class="image-preview-card">
-                  <img [src]="category.imageUrl" [alt]="category.name" />
+                  <img [src]="imagePreview()" [alt]="category.name" />
                 </div>
               }
             </div>

@@ -5,11 +5,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { IFilterProducts } from '../../interfaces/filter-products.interface';
 import { IClientProductCard } from '../../interfaces/client-product-card.interface';
 import { IProducts } from '../../../admin/interfaces/products.interface';
+import { resolveProductCardImages } from '../../models/product-card-images.model';
+import { isProductOutOfStock } from '../../../../shared/utils/product-stock.util';
 import { CartService } from '../../state-services/cart.service';
 import { ICartState } from '../../interfaces/cart-interface';
 import { Subject, combineLatest, takeUntil } from 'rxjs';
-
-const DEFAULT_PRODUCT_IMAGE = '/assets/images/seed/tech-1.jpg';
 
 const PAGE_SIZE = 12;
 
@@ -238,18 +238,21 @@ export class ProductsComponent implements OnInit, OnDestroy {
   private mapProductCard(product: IProducts): IClientProductCard {
     const hasDiscount = this.hasValidDiscount(product.price, product.discountPrice);
     const displayPrice = hasDiscount ? product.discountPrice! : product.price;
+    const cardImages = resolveProductCardImages(product.images);
 
     return {
       id: product.id ?? 0,
       name: product.name,
-      mainImageUrl: this.resolveProductImage(product),
+      mainImageUrl: cardImages.mainImageUrl,
+      hoverImageUrl: cardImages.hoverImageUrl,
+      hasHoverImage: cardImages.hasHoverImage,
       displayPrice,
       hasDiscount,
       originalPrice: product.price,
       discountPercent: hasDiscount
         ? this.calculateDiscountPercent(product.price, product.discountPrice!)
         : 0,
-      outOfStock: product.stockQuantity === 0,
+      outOfStock: isProductOutOfStock(product.stockQuantity),
       product,
     };
   }
@@ -260,24 +263,6 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
   private calculateDiscountPercent(price: number, discountPrice: number): number {
     return Math.round(((price - discountPrice) / price) * 100);
-  }
-
-  private resolveProductImage(product: IProducts): string {
-    if (product.images && product.images.length > 0) {
-      const mainImage = product.images.find((image) => image.isMain && !image.isDeleted);
-
-      if (mainImage?.imageUrl) {
-        return mainImage.imageUrl;
-      }
-
-      const firstImage = product.images.find((image) => !image.isDeleted);
-
-      if (firstImage?.imageUrl) {
-        return firstImage.imageUrl;
-      }
-    }
-
-    return DEFAULT_PRODUCT_IMAGE;
   }
 
   private buildPageNumbers(totalPages: number): number[] {

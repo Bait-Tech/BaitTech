@@ -37,18 +37,7 @@ namespace ECommercePlatform.Server.Services.HomePageCustomize.Hero
                 return new HeroSectionDTO();
             }
 
-            var result = new HeroSectionDTO
-            {
-                ID = heroSection.ID,
-                DisplayOrder = heroSection.DisplayOrder,
-                HeroSectionImageDTOs = heroSection.Images.Select(i => new HeroSectionImageDTO
-                {
-                    ID = i.ID,
-                    ImageUrl = i.ImageUrl,
-                    IsMain = i.IsMain,
-                    LinkUrl = i.LinkUrl
-                }).ToList()
-            };
+            var result = MapHeroSection(heroSection);
 
             var expiryTime = DateTimeOffset.Now.AddSeconds(30);
             _casheService.SetData("HeroSection", result, expiryTime);
@@ -64,33 +53,16 @@ namespace ECommercePlatform.Server.Services.HomePageCustomize.Hero
             };
 
             await _DBContext.AddAsync(heroSection);
-            await _DBContext.SaveChangesAsync(); 
+            await _DBContext.SaveChangesAsync();
 
-            var sectionImages = new List<HeroImage>();
-
-            foreach (var image in model.HeroSectionImageDTOs)
-            {
-                if (image.ImageFile != null)
-                {
-                    image.ImageUrl = await _imageHelper.AddImage(image.ImageFile, "heroSection");
-                }
-
-                sectionImages.Add(new HeroImage
-                {
-                    HeroSectionID = heroSection.ID,
-                    ImageUrl = image.ImageUrl,
-                    IsMain = image.IsMain,
-                    LinkUrl = image.LinkUrl
-                });
-            }
+            var sectionImages = await BuildHeroImages(model.HeroSectionImageDTOs, heroSection.ID);
 
             await _DBContext.AddRangeAsync(sectionImages);
-
             await _DBContext.SaveChangesAsync();
+            ClearHeroSectionCache();
 
             return heroSection.ID;
         }
-
 
         public async Task<int> Update(HeroSectionDTO model)
         {
@@ -107,38 +79,121 @@ namespace ECommercePlatform.Server.Services.HomePageCustomize.Hero
                 .Where(hi => hi.HeroSectionID == model.ID)
                 .ToListAsync();
 
-
-            foreach (var imageURL in existSectionImages.Select(esi => esi.ImageUrl))
-            {
-                await _imageHelper.DeleteImage(imageURL);
-            }
+            await DeleteLocalHeroImages(existSectionImages);
 
             _DBContext.RemoveRange(existSectionImages);
-
             await _DBContext.SaveChangesAsync();
 
-            var updatedImages = new List<HeroImage>();
-
-            foreach (var image in model.HeroSectionImageDTOs)
-            {
-                if (image.ImageFile != null)
-                {
-                    image.ImageUrl = await _imageHelper.AddImage(image.ImageFile, "heroSection");
-                }
-
-                updatedImages.Add(new HeroImage
-                {
-                    HeroSectionID = model.ID,
-                    ImageUrl = image.ImageUrl,
-                    IsMain = image.IsMain,
-                    LinkUrl = image.LinkUrl
-                });
-            }
+            var updatedImages = await BuildHeroImages(model.HeroSectionImageDTOs, model.ID);
 
             await _DBContext.AddRangeAsync(updatedImages);
             await _DBContext.SaveChangesAsync();
+            ClearHeroSectionCache();
 
             return section.ID;
+        }
+
+        private static HeroSectionDTO MapHeroSection(HeroSection heroSection)
+        {
+            return new HeroSectionDTO
+            {
+                ID = heroSection.ID,
+                DisplayOrder = heroSection.DisplayOrder,
+                HeroSectionImageDTOs = heroSection.Images.Select(MapHeroImage).ToList()
+            };
+        }
+
+        private static HeroSectionImageDTO MapHeroImage(HeroImage image)
+        {
+            return new HeroSectionImageDTO
+            {
+                ID = image.ID,
+                ImageUrl = image.ImageUrl,
+                VideoUrl = image.VideoUrl,
+                IsMain = image.IsMain,
+                LinkUrl = image.LinkUrl
+            };
+        }
+
+        private async Task<List<HeroImage>> BuildHeroImages(List<HeroSectionImageDTO> images, int heroSectionId)
+        {
+            var sectionImages = new List<HeroImage>();
+
+            foreach (var image in images)
+            {
+                if (!HasSlideMedia(image))
+                {
+                    continue;
+                }
+
+                var imageUrl = await ResolveImageUrl(image);
+
+                sectionImages.Add(new HeroImage
+                {
+                    HeroSectionID = heroSectionId,
+                    ImageUrl = imageUrl,
+                    VideoUrl = NormalizeOptionalText(image.VideoUrl),
+                    IsMain = image.IsMain,
+                    LinkUrl = NormalizeOptionalText(image.LinkUrl)
+                });
+            }
+
+            return sectionImages;
+        }
+
+        private async Task<string> ResolveImageUrl(HeroSectionImageDTO image)
+        {
+            if (image.ImageFile != null)
+            {
+                return await _imageHelper.AddImage(image.ImageFile, "heroSection");
+            }
+
+            return NormalizeOptionalText(image.ImageUrl);
+        }
+
+        private static bool HasSlideMedia(HeroSectionImageDTO image)
+        {
+            var hasImage = !string.IsNullOrWhiteSpace(image.ImageUrl) || image.ImageFile != null;
+            var hasVideo = !string.IsNullOrWhiteSpace(image.VideoUrl);
+            return hasImage || hasVideo;
+        }
+
+        private async Task DeleteLocalHeroImages(IEnumerable<HeroImage> images)
+        {
+            foreach (var image in images)
+            {
+                if (!IsLocalImageUrl(image.ImageUrl))
+                {
+                    continue;
+                }
+
+                await _imageHelper.DeleteImage(image.ImageUrl);
+            }
+        }
+
+        private static bool IsLocalImageUrl(string imageUrl)
+        {
+            if (string.IsNullOrWhiteSpace(imageUrl))
+            {
+                return false;
+            }
+
+            return imageUrl.Contains("/images/", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string NormalizeOptionalText(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            return value.Trim();
+        }
+
+        private void ClearHeroSectionCache()
+        {
+            _casheService.RemoveData("HeroSection");
         }
     }
 }

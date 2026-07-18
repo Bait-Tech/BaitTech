@@ -22,7 +22,7 @@
               <i class="pi pi-spin pi-spinner"></i>
             </div>
           }
-          <p-table #dt [value]="products()" [rows]="10" [paginator]="true" [totalRecords]="totalRecords()" [lazy]="true"
+          <p-table #dt [value]="products()" [rows]="pageSize" [first]="tableFirst()" [paginator]="true" [totalRecords]="totalRecords()" [lazy]="true"
             (onLazyLoad)="loadProducts($event)" [globalFilterFields]="['name', 'code']" [(selection)]="selectedProducts" selectionMode="multiple"
             [rowHover]="true" dataKey="id"
             currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries" [showCurrentPageReport]="true">
@@ -54,7 +54,13 @@
             </td>
             <td>{{product.code}}</td>
             <td>{{product.price | jodCurrency}}</td>
-            <td>{{product.stockQuantity}}</td>
+            <td>
+              @if (product.stockQuantity != null) {
+                {{ product.stockQuantity }}
+              } @else {
+                —
+              }
+            </td>
             <td>
               <button pButton pRipple icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2"
               (click)="editProduct(product)"></button>
@@ -178,7 +184,7 @@
                   inputId="stock"
                   formControlName="stockQuantity"
                   [min]="0"
-                  placeholder="0"
+                  placeholder="Leave empty for unlimited"
                   styleClass="form-control-full"
                   [ngClass]="{'ng-invalid ng-dirty': isFieldInvalid('stockQuantity')}">
                 </p-inputnumber>
@@ -246,7 +252,7 @@
             </span>
             <div class="form-section-heading">
               <h3 class="form-section-title">Product Images</h3>
-              <p class="form-section-desc">Upload photos and set a main image</p>
+              <p class="form-section-desc">Upload photos or paste image URLs and set a main image</p>
             </div>
           </div>
 
@@ -266,6 +272,29 @@
               <span class="image-upload-title">Click to upload images</span>
               <span class="image-upload-hint">PNG or JPG, max 1MB each</span>
             </button>
+
+            <span class="image-url-divider">Or paste image URL</span>
+
+            <div class="image-url-row">
+              <input
+                type="url"
+                pInputText
+                [ngModel]="imageUrlInput()"
+                (ngModelChange)="onImageUrlInputChange($event)"
+                [ngModelOptions]="{ standalone: true }"
+                placeholder="https://example.com/image.jpg"
+                class="form-control-full"
+                (keyup.enter)="addImageFromUrl()" />
+              <button
+                pButton
+                pRipple
+                type="button"
+                icon="pi pi-plus"
+                label="Add"
+                class="p-button-outlined"
+                (click)="addImageFromUrl()">
+              </button>
+            </div>
 
             @if (visibleImageCount() > 0) {
               <div class="image-gallery" formArrayName="images">
