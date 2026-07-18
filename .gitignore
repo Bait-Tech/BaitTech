@@ -4,7 +4,6 @@
 
 /.vs
 /ecommerceplatform.client/.vscode
-/ecommerceplatform.client/obj/Debug
-/ECommercePlatform.Server/bin/Debug/net8.0
-/ECommercePlatform.Server/obj
-/path/to/your/obj
+/ecommerceplatform.client/obj/
+/ECommercePlatform.Server/bin/
+/ECommercePlatform.Server/obj/
