@@ -106,11 +106,14 @@ jobs:
           web_config.write_text(cleaned, encoding="utf-8")
           PY
 
-      - name: Remove local photos from publish output
+      - name: Keep seed images only in publish output
         run: |
-          rm -rf ./publish/wwwroot/images
-          rm -rf ./publish/wwwroot/assets/images
-          find ./publish -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.gif' -o -iname '*.webp' -o -iname '*.mp4' -o -iname '*.webm' -o -iname '*.mov' \) -delete || true
+          if [ -d "./publish/wwwroot/images" ]; then
+            find ./publish/wwwroot/images -mindepth 1 -maxdepth 1 ! -name 'seed' -exec rm -rf {} +
+          fi
+          if [ -d "./publish/wwwroot/assets/images" ]; then
+            find ./publish/wwwroot/assets/images -mindepth 1 -maxdepth 1 ! -name 'seed' -exec rm -rf {} +
+          fi
 
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -124,14 +127,10 @@ jobs:
           exclude: |
             **/.git*
             **/.git*/**
-            **/wwwroot/images/**
-            **/wwwroot/assets/images/**
-            **/*.jpg
-            **/*.jpeg
-            **/*.png
-            **/*.gif
-            **/*.webp
-            **/*.mp4
-            **/*.webm
-            **/*.mov
+            **/wwwroot/images/products/**
+            **/wwwroot/images/categories/**
+            **/wwwroot/images/subcategories/**
+            **/wwwroot/images/companySettings/**
+            **/wwwroot/images/hero/**
+            **/wwwroot/images/HeroSection/**
             **/logs/**
