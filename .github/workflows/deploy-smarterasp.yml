@@ -115,6 +115,19 @@ jobs:
             find ./publish/wwwroot/assets/images -mindepth 1 -maxdepth 1 ! -name 'seed' -exec rm -rf {} +
           fi
 
+      - name: Take site offline for deploy
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          printf '%s\n' '<!DOCTYPE html><html><body><h1>Updating...</h1></body></html>' > app_offline.htm
+          curl --fail --silent --show-error \
+            --user "${FTP_USERNAME}:${FTP_PASSWORD}" \
+            -T app_offline.htm \
+            "ftp://${FTP_SERVER}/site1/app_offline.htm"
+          sleep 12
+
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -124,9 +137,11 @@ jobs:
           local-dir: ./publish/
           server-dir: ./site1/
           dangerous-clean-slate: false
+          timeout: 600000
           exclude: |
             **/.git*
             **/.git*/**
+            **/app_offline.htm
             **/wwwroot/images/products/**
             **/wwwroot/images/categories/**
             **/wwwroot/images/subcategories/**
@@ -134,3 +149,16 @@ jobs:
             **/wwwroot/images/hero/**
             **/wwwroot/images/HeroSection/**
             **/logs/**
+            **/*.log
+
+      - name: Bring site online
+        if: always()
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          curl --fail --silent --show-error \
+            --user "${FTP_USERNAME}:${FTP_PASSWORD}" \
+            -Q "DELE site1/app_offline.htm" \
+            "ftp://${FTP_SERVER}/" || true
